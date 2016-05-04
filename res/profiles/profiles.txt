@@ -1,3 +1,5 @@
+Voisin, Pays, 13, osef@osef.osef, osef, voisin
+R2D2-2,Chine,9,r2d22@fake.com,password9,avoidcloserwallagent
 Leroy,USA,6,leroy@fake.com,password1,null
 Kvothe,France,5,kvothe@fake.com,password2,null
 Fitz,Angleterre,1,fitz@fake.com,password3,null
@@ -6,4 +8,6 @@ Toto,France,2,toto@fake.com,password5,null
 Zaza,France,4,zaza@fake.com,password6,null
 Roboto,Japon,7,roboto@fake.com,password7,randomagent
 R2D2-1,Chine,8,r2d21@fake.com,password8,avoidcloserwallagent
-R2D2-2,Chine,9,r2d22@fake.com,password9,avoidcloserwallagent
+Best,Chine,10,r2d22@fake.com,password9,bestagent
+SafeAgent,Chine,11,r2d22@fake.com,password9,AgentSafeBonus
+Pierre, France, 12, pierre@fake.com,password11,Pierre
