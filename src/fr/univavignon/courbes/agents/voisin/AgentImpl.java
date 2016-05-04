@@ -46,6 +46,7 @@ public class AgentImpl extends Agent
 	private Direction previousDirection = Direction.NONE;
 
 	private long startTime = 1000;
+	private Direction direction;
 	/**
 	 * Crée un agent contrôlant le joueur spécifié
 	 * dans la partie courante.
@@ -113,15 +114,10 @@ public class AgentImpl extends Agent
 			Set<Position> trail = new TreeSet<Position>(border);
 			Position posSnake = new Position(agentSnake.currentX,agentSnake.currentY);
 			getObstacle(board, trail);
-			HashMap<Direction, Double > valeurDirection = bestChoice(board, trail,posSnake,0, false, currentAngle);
-			if(valeurDirection.containsKey(Direction.RIGHT))
-				previousDirection = Direction.RIGHT;
-			else if(valeurDirection.containsKey(Direction.LEFT))
-				previousDirection = Direction.LEFT;
-			else
-				previousDirection = Direction.NONE;
+			bestChoice(board, trail,posSnake,0, false, currentAngle);
+			previousDirection = direction;
 			startTime=(System.currentTimeMillis()+startTime)/2;
-			return previousDirection;
+			return direction;
 		}
 	}
 	
@@ -137,14 +133,13 @@ public class AgentImpl extends Agent
 	}
 	 
 	
-	public HashMap<Direction, Double > bestChoice(Board board, Set<Position> trail, Position pos, double val, boolean danger, double angle)
+	public double bestChoice(Board board, Set<Position> trail, Position pos, double val, boolean danger, double angle)
 	{
 		checkInterruption();
 		HashMap<Direction, Double > valeurDirection = new HashMap<Direction, Double >();
-		HashMap<Direction, Double > resultat = new HashMap<Direction, Double >();
-		if(val>100)
+		double resultat = 0;
+		if(val>10)
 		{
-			resultat.put(Direction.NONE,0.0);
 			return resultat;
 		}
 		int res = getWhereSnake(pos,10);
@@ -160,22 +155,31 @@ public class AgentImpl extends Agent
 		}
 		if(res==2)
 		{
-			resultat.put(Direction.NONE,0.0);
 			return resultat;
 		}
 		
-		Pair<Position, Double> cpos = calculatePosition(Direction.RIGHT, pos, angle);
-		valeurDirection.putAll(bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond()));
+		Pair<Position, Double> cpos = new Pair<Position, Double>();
+		cpos = calculatePosition(Direction.RIGHT, pos, angle);
+		valeurDirection.put(Direction.RIGHT, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond()));
 		cpos = calculatePosition(Direction.LEFT, pos, angle);
-		valeurDirection.putAll(bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond()));
+		valeurDirection.put(Direction.LEFT, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond()));
 		cpos = calculatePosition(Direction.NONE, pos, angle);
-		valeurDirection.putAll(bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond()));
+		valeurDirection.put(Direction.NONE, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond()));
 		if(valeurDirection.get(Direction.RIGHT)>valeurDirection.get(Direction.LEFT) && valeurDirection.get(Direction.RIGHT)>valeurDirection.get(Direction.NONE))
-			resultat.put(Direction.RIGHT,valeurDirection.get(Direction.RIGHT)); 
+		{
+			resultat = valeurDirection.get(Direction.RIGHT);
+			direction = Direction.RIGHT;
+		}
 		else if(valeurDirection.get(Direction.LEFT)>valeurDirection.get(Direction.RIGHT) && valeurDirection.get(Direction.LEFT)>valeurDirection.get(Direction.NONE))
-			resultat.put(Direction.LEFT,valeurDirection.get(Direction.LEFT)); 
+		{
+			resultat = valeurDirection.get(Direction.LEFT); 
+			direction = Direction.LEFT;
+		}
 		else
-			resultat.put(Direction.NONE,valeurDirection.get(Direction.NONE)); 
+		{
+			resultat = valeurDirection.get(Direction.NONE); 
+			direction = Direction.NONE;
+		}
 		return resultat;
 	}
 	
