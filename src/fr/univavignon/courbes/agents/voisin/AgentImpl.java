@@ -18,6 +18,7 @@ package fr.univavignon.courbes.agents.voisin;
  * along with Courbes. If not, see <http://www.gnu.org/licenses/>.
  */
 
+import java.util.HashMap;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -38,7 +39,12 @@ public class AgentImpl extends Agent
 	private static double ANGLE_WIDTH = Math.PI/2;
 	/** Distance en pixels à partir de laquelle on considère qu'on est dans un coin */
 	private static int CORNER_THRESHOLD = 100;
-	
+	private Set<Position> border = new TreeSet<Position>();
+	/** Direction courante du serpent de l'agent */
+	private double currentAngle;
+	private Direction previousDirection = Direction.NONE;
+
+	private long startTime = 1000;
 	/**
 	 * Crée un agent contrôlant le joueur spécifié
 	 * dans la partie courante.
@@ -83,50 +89,9 @@ public class AgentImpl extends Agent
 		serp.y+=val;
 		return serp;
 	}
-}
 	
-	public Position add(Position serp, int val)
-	{
-		serp.x+=val;
-		serp.y+=val;
-		return serp;
-	}
-}
-=======
-import java.util.HashMap;
-import java.util.Set;
-import java.util.TreeSet;
 
-import fr.univavignon.courbes.agents.Agent;
-import fr.univavignon.courbes.common.Board;
-import fr.univavignon.courbes.common.Direction;
-import fr.univavignon.courbes.common.Position;
-import fr.univavignon.courbes.common.Snake;
-
-
-
-
-public class AgentImpl extends Agent
-{
-	private Snake agentSnake;
-	private Set<Position> border = new TreeSet<Position>();
-	private static double ANGLE_WIDTH = Math.PI/2;
-	/** Direction courante du serpent de l'agent */
-	private double currentAngle;
-	private static int CORNER_THRESHOLD = 100;
-	/**
-	 * @param playerId
-	 */
 	
-	private Direction previousDirection = Direction.NONE;
-
-	private long startTime = 1000;
-	
-	
-	
-	public AgentImpl(Integer playerId) {
-		super(playerId);
-	}
 
 	@Override
 	public Direction processDirection() {
@@ -251,5 +216,3 @@ public class AgentImpl extends Agent
 	
 	
 }
-
->>>>>>> branch 'master' of https://github.com/Tazam/Projet2015.git
