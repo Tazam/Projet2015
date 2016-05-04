@@ -61,37 +61,38 @@ public class AgentImpl extends Agent
 	/** Temps avant que l'agent ne change de direction */ 
 	private long timeBeforeDirChange = 0;
 
-	public int getWhereSnake(Position position, int x)
+	public int getWhereSnake(Position position, int val, set<Position>trail)
 	{	
 		checkInterruption();	// on doit tester l'interruption au début de chaque méthode
 		Board board=getBoard();
 		for(Snake s: board.snakes)
 		{
 			checkInterruption();
+			//Check si le serpent testé n'est pas l'agent.
 			if(s.playerId!=agentSnake.playerId)
 			{
-				if(position.x==s.x && position.y==s.y)
+				//si on est sur lui, on renvoie 2
+				if(position.x==s.currentX && position.y==s.currentY)
 				{
 					return 2;
 				}
-				else if(position.x==add(head, x).x && position.y==add(head, x).y)
+				//si on est dans son rayon d'action (prédeterminé)
+				if(Math.sqrt((Math.pow((s.currentX-position.x), 2))-(Math.pow((s.currentY-position.y), 2)))<val)
 				{
 					return 1;
 				}
 			}
-			return 0;
+			for(Position pos: trail)
+			{
+				checkInterruption();
+				if(position.x==s.currentX && position.y==s.currentY)
+				{
+					return 2;
+				}
+			}
 		}
+		return 0;
 	}
-	
-	public Position add(Position serp, int val)
-	{
-		serp.x+=val;
-		serp.y+=val;
-		return serp;
-	}
-	
-
-	
 
 	@Override
 	public Direction processDirection() {
