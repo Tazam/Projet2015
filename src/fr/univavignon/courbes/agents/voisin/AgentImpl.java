@@ -71,7 +71,7 @@ public class AgentImpl extends Agent
 			Set<Position> trail = new TreeSet<Position>(border);
 			Position posSnake = new Position(agentSnake.currentX,agentSnake.currentY);
 			getObstacle(board, trail);
-			HashMap<Direction, Double > valeurDirection = bestChoice(board, trail,posSnake,0, false);
+			HashMap<Direction, Double > valeurDirection = bestChoice(board, trail,posSnake,0, false, currentAngle);
 			if(valeurDirection.containsKey(Direction.RIGHT))
 				previousDirection = Direction.RIGHT;
 			else if(valeurDirection.containsKey(Direction.LEFT))
@@ -95,7 +95,7 @@ public class AgentImpl extends Agent
 	}
 	 
 	
-	public HashMap<Direction, Double > bestChoice(Board board, Set<Position> trail, Position pos, double val, boolean danger)
+	public HashMap<Direction, Double > bestChoice(Board board, Set<Position> trail, Position pos, double val, boolean danger, double angle)
 	{
 		checkInterruption();
 		HashMap<Direction, Double > valeurDirection = new HashMap<Direction, Double >();
@@ -116,9 +116,13 @@ public class AgentImpl extends Agent
 			resultat.put(Direction.NONE,0.0);
 			return resultat;
 		}
-		valeurDirection.putAll(bestChoice(board, trail, calculatedPosition(Direction.RIGHT, pos), val), danger);
-		valeurDirection.putAll(bestChoice(board, trail, calculatedPosition(Direction.LEFT, pos), val), danger);
-		valeurDirection.putAll(bestChoice(board, trail, calculatedPosition(Direction.NONE, pos), val), danger);
+		
+		Pair<Position, Double> cpos = calculatedPosition(Direction.RIGHT, pos, angle);
+		valeurDirection.putAll(bestChoice(board, trail, cpos.first, val, danger, cpos.second));
+		cpos = calculatedPosition(Direction.LEFT, pos, angle);
+		valeurDirection.putAll(bestChoice(board, trail, cpos.first, val, danger, cpos.second));
+		cpos = calculatedPosition(Direction.NONE, pos, angle);
+		valeurDirection.putAll(bestChoice(board, trail, cpos.first, val, danger, cpos.second));
 		if(valeurDirection.get(Direction.RIGHT)>valeurDirection.get(Direction.LEFT) && valeurDirection.get(Direction.RIGHT)>valeurDirection.get(Direction.NONE))
 			resultat.put(Direction.RIGHT,valeurDirection.get(Direction.RIGHT)); 
 		else if(valeurDirection.get(Direction.LEFT)>valeurDirection.get(Direction.RIGHT) && valeurDirection.get(Direction.LEFT)>valeurDirection.get(Direction.NONE))
