@@ -273,7 +273,7 @@ public class AgentImpl extends Agent
 					+ Math.pow(agentSnake.currentY-position.y,2));
 					
 				// si la position est plus proche que le plus proche obstacle connu : on met à jour
-				if(dist<result[0] && (dist>5 || result[0]>5))
+				if(dist<result[0] && dist>5 )
 				{	result[0] = dist;	// mise à jour de la distance
 					result[1] = angle;	// mise à jour de l'angle
 				}			
