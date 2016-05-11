@@ -88,10 +88,9 @@ public class AgentImpl extends Agent
 	private Snake agentSnake;
 
 
-	public int getWhereSnake(Position position, Position position2, int val, Set<Position>trail)
+	public int getWhereSnake(Position position, Position position2, int val, Set<Position>trail, Board board)
 	{	
 		checkInterruption();	// on doit tester l'interruption au début de chaque méthode
-		Board board=getBoard();
 		for(Snake s: board.snakes)
 		{
 			checkInterruption();
@@ -117,7 +116,9 @@ public class AgentImpl extends Agent
 					return 2;
 				}
 			}
-
+		}
+		return 0;
+	}
 
 	@Override
 	public Direction processDirection() {
@@ -140,7 +141,7 @@ public class AgentImpl extends Agent
 			System.out.println("debut");
 			int niveau=0;
 			System.out.println("ma pos="+posSnake);
-			bestChoice(board, trail,posSnake,0, false, currentAngle, posSnake, niveau);
+			bestChoice(board, trail,posSnake,0, false, currentAngle, posSnake, niveau, posSnake);
 			startTime=(System.currentTimeMillis()-time+startTime)/2;
 			System.out.println(startTime);
 			System.out.println("fin");
@@ -166,31 +167,26 @@ public class AgentImpl extends Agent
 		double resultat = val;
 		if(pos!=posSnake)
 		{
-			resultat.put(Direction.NONE,0.0);
 			return resultat;
 		}
-		int res = getWhereSnake(pos,10,trail);
+		if(niveau>=6) // nombre de tour de boucle max
+		{
+			return resultat;
+		}
+		int res = getWhereSnake(pos, lastpos,10, trail , board);
 		if(res==0)
 			if(danger)
-			if(niveau>=6) // nombre de tour de boucle max
-			{
-				return resultat;
-			}
-			int res = getWhereSnake(pos, lastpos,10, trail , board);
-			if(res==0)
-				if(danger)
-					val+=0.5;
-				else
-					val++;
-			if(res==1)
-			{
 				val+=0.5;
-				danger=true;
-			}
-			if(res==2)
-			{
-				return resultat;
-			}
+			else
+				val++;
+		if(res==1)
+		{
+			val+=0.5;
+			danger=true;
+		}
+		if(res==2)
+		{
+			return resultat;
 		}
 		Pair<Position, Double> cpos = new Pair<Position, Double>();
 		cpos = calculatePosition(Direction.RIGHT, pos, angle);
