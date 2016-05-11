@@ -90,6 +90,14 @@ public class AgentImpl extends Agent
 	public int getWhereSnake(Position position, Position position2, int val, Set<Position>trail, Board board)
 	{	
 		checkInterruption();	// on doit tester l'interruption au début de chaque méthode
+		double angle= Math.atan2(position.y - position2.y, position.x - position2.x);
+		double angle2=angle+Math.PI/2;
+		double a = agentSnake.headRadius*Math.cos(angle2);
+		double b = agentSnake.headRadius*Math.sin(angle2);
+		Position tmp1=new Position((int)(position.x+a),(int)(position.y+b));
+		Position tmp2=new Position((int)(position.x-a),(int)(position.y-b));
+		Position tmp3=new Position((int)(position2.x+a),(int)(position2.y+b));
+		Position tmp4=new Position((int)(position2.x-a),(int)(position2.y-b));
 		for(Snake s: board.snakes)
 		{
 			checkInterruption();
@@ -114,6 +122,7 @@ public class AgentImpl extends Agent
 				{
 					return 2;
 				}
+				if()
 			}
 		}
 		return 0;
