@@ -30,6 +30,10 @@ public class Pair<U, V> {
 	        this.second = second;
 	    }
 	    
+	    public Pair() {
+	    	
+	    }
+	    
 	    /**
 	     * @return the first value of the pair
 	     */
