@@ -67,7 +67,6 @@ public class AgentImpl extends Agent
 	private static double ANGLE_WIDTH = Math.PI/2;
 	/** Distance en pixels à partir de laquelle on considère qu'on est dans un coin */
 	private static int CORNER_THRESHOLD = 100;
-	private Set<Position> border = new TreeSet<Position>();
 	/** Direction courante du serpent de l'agent */
 	private double currentAngle;
 	
@@ -87,11 +86,10 @@ public class AgentImpl extends Agent
 	/** Serpent contrôlé par l'agent */
 	private Snake agentSnake;
 
-<<<<<<< HEAD
-	public int getWhereSnake(Position position, Position position2, int val, Set<Position>trail)
+
+	public int getWhereSnake(Position position, Position position2, int val, Set<Position>trail, Board board)
 	{	
 		checkInterruption();	// on doit tester l'interruption au début de chaque méthode
-		Board board=getBoard();
 		for(Snake s: board.snakes)
 		{
 			checkInterruption();
@@ -117,49 +115,9 @@ public class AgentImpl extends Agent
 					return 2;
 				}
 			}
-=======
-
-	public int getWhereSnake(Position position, int val, Set<Position>trail, Board board)
-	{	
-		checkInterruption();	// on doit tester l'interruption au début de chaque méthode
-		for(Snake s: board.snakes)
-		{
-			checkInterruption();
-			//Check si le serpent testé n'est pas l'agent.
-			if(s.playerId!=agentSnake.playerId)
-			{
-				//si on est sur lui, on renvoie 2
-				if(position.x==s.currentX && position.y==s.currentY)
-				{
-					return 2;
-				}
-				//si on est dans son rayon d'action (prédeterminé)
-				if(Math.sqrt((Math.pow((s.currentX-position.x), 2))-(Math.pow((s.currentY-position.y), 2)))<val)
-				{
-					return 1;
-				}
-			}
-			if(position.x<0 || position.y<0 || position.x>board.width || position.y>board.height)
-				return 2;
-			for(Position pos: trail)
-			{
-				checkInterruption();
-				if(position.x==s.currentX && position.y==s.currentY)
-				{
-					return 2;
-				}
-			}
->>>>>>> branch 'master' of https://github.com/Tazam/Projet2015.git
 		}
 		return 0;
 	}
-<<<<<<< HEAD
-=======
-	
-	
-
-	
->>>>>>> branch 'master' of https://github.com/Tazam/Projet2015.git
 
 	@Override
 	public Direction processDirection() {
@@ -171,21 +129,20 @@ public class AgentImpl extends Agent
 			return null;
 		else
 		{
-			if(border.size()==0)
-				ObstacleBorder(board);
 			if(agentSnake==null)
 				agentSnake = board.snakes[getPlayerId()];
 			updateAngles();
-			Set<Position> trail = new TreeSet<Position>(border);
+			Set<Position> trail = new TreeSet<Position>();
 			Position posSnake = new Position(agentSnake.currentX,agentSnake.currentY);
 			getObstacle(board, trail);
 			System.out.println("debut");
 			int niveau=0;
 			System.out.println("ma pos="+posSnake);
-			bestChoice(board, trail,posSnake,0, false, currentAngle, posSnake, niveau);
+			bestChoice(board, trail,posSnake,0, false, currentAngle, posSnake, niveau, posSnake);
 			startTime=(System.currentTimeMillis()-time+startTime)/2;
 			System.out.println(startTime);
 			System.out.println("fin");
+			
 			return direction;
 		}
 	}
@@ -201,51 +158,43 @@ public class AgentImpl extends Agent
 			currentAngle+=2*Math.PI;
 	}
 	 
-	public double bestChoice(Board board, Set<Position> trail, Position pos, double val, boolean danger, double angle, Position posSnake, int niveau)
+	public double bestChoice(Board board, Set<Position> trail, Position pos, double val, boolean danger, double angle, Position posSnake, int niveau, Position lastpos)
 	{
 		checkInterruption();
 		HashMap<Direction, Double > valeurDirection = new HashMap<Direction, Double >();
 		double resultat = val;
 		if(pos!=posSnake)
 		{
-<<<<<<< HEAD
-			resultat.put(Direction.NONE,0.0);
 			return resultat;
 		}
-		int res = getWhereSnake(pos,10,trail);
+		if(niveau>=6) // nombre de tour de boucle max
+		{
+			return resultat;
+		}
+		int res = getWhereSnake(pos, lastpos,10, trail , board);
 		if(res==0)
 			if(danger)
-=======
-			if(niveau>=6) // nombre de tour de boucle max
-			{
-				return resultat;
-			}
-			int res = getWhereSnake(pos,10, trail , board);
-			if(res==0)
-				if(danger)
-					val+=0.5;
-				else
-					val++;
-			if(res==1)
-			{
->>>>>>> branch 'master' of https://github.com/Tazam/Projet2015.git
 				val+=0.5;
-				danger=true;
-			}
-			if(res==2)
-			{
-				return resultat;
-			}
+			else
+				val++;
+		if(res==1)
+		{
+			val+=0.5;
+			danger=true;
+		}
+		if(res==2)
+		{
+			return resultat;
 		}
 		Pair<Position, Double> cpos = new Pair<Position, Double>();
 		cpos = calculatePosition(Direction.RIGHT, pos, angle);
-		valeurDirection.put(Direction.RIGHT, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond(),posSnake,niveau+1));
+		valeurDirection.put(Direction.RIGHT, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond(),posSnake,niveau+1, pos));
 		checkInterruption();
 		cpos = calculatePosition(Direction.LEFT, pos, angle);
-		valeurDirection.put(Direction.LEFT, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond(),posSnake,niveau+1));
+		valeurDirection.put(Direction.LEFT, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond(),posSnake,niveau+1, pos));
 		checkInterruption();
 		cpos = calculatePosition(Direction.NONE, pos, angle);
-		valeurDirection.put(Direction.NONE, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond(),posSnake,niveau+1));
+		valeurDirection.put(Direction.NONE, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond(),posSnake,niveau+1, pos));
 		checkInterruption();
 		double dist = Math.sqrt(
 				Math.pow(pos.x-cpos.getFirst().x, 2) 
@@ -299,24 +248,6 @@ public class AgentImpl extends Agent
 		}
 	}
 	
-	private void ObstacleBorder(Board board)
-	{	
-		checkInterruption();
-		for(int i =0; i<getBoard().width ; i++ )
-		{	
-			Position pos = new Position(i,0);
-			Position pos2 = new Position(i,800);
-			border.add(pos);
-			border.add(pos2);			
-		}
-		for(int i =0; i<board.height ; i++ )
-		{	
-			Position pos = new Position(0,i);
-			Position pos2 = new Position(800,i);
-			border.add(pos);
-			border.add(pos2);
-		}
-	}
 	
 	public Pair<Position, Double> calculatePosition(Direction d, Position p, double angle){
 		checkInterruption();
