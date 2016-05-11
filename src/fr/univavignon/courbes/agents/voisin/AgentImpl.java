@@ -101,6 +101,36 @@ public class AgentImpl extends Agent
 		Position tmp2=new Position((int)(position.x-a),(int)(position.y-b));
 		Position tmp3=new Position((int)(position2.x+a),(int)(position2.y+b));
 		Position tmp4=new Position((int)(position2.x-a),(int)(position2.y-b));
+		Position center = new Position((tmp1.x+tmp4.x)/2, (tmp1.y+tmp4.y)/2);
+		
+		int dx = tmp1.x - center.x;
+		int dy = tmp1.y - center.y;
+		double newX = center.x - dx*Math.cos(-angle) + dy*Math.sin(-angle);
+		double newY = center.x - dx*Math.sin(-angle) - dy*Math.cos(-angle);
+		tmp1.x = (int)newX;
+		tmp1.y = (int)newY;
+		
+		dx = tmp2.x - center.x;
+		dy = tmp2.y - center.y;
+		newX = center.x - dx*Math.cos(-angle) + dy*Math.sin(-angle);
+		newY = center.x - dx*Math.sin(-angle) - dy*Math.cos(-angle);
+		tmp2.x = (int)newX;
+		tmp2.y = (int)newY;
+		
+		dx = tmp3.x - center.x;
+		dy = tmp3.y - center.y;
+		newX = center.x - dx*Math.cos(-angle) + dy*Math.sin(-angle);
+		newY = center.x - dx*Math.sin(-angle) - dy*Math.cos(-angle);
+		tmp3.x = (int)newX;
+		tmp3.y = (int)newY;
+		
+		dx = tmp4.x - center.x;
+		dy = tmp4.y - center.y;
+		newX = center.x - dx*Math.cos(-angle) + dy*Math.sin(-angle);
+		newY = center.x - dx*Math.sin(-angle) - dy*Math.cos(-angle);
+		tmp4.x = (int)newX;
+		tmp4.y = (int)newY;
+		
 		for(Snake s: board.snakes)
 		{
 			checkInterruption();
@@ -120,12 +150,23 @@ public class AgentImpl extends Agent
 			}
 			for(Position pos: trail)
 			{
+				Position tmp5 = new Position(pos);
+				dx = tmp5.x - center.x;
+				dy = tmp5.y - center.y;
+				newX = center.x - dx*Math.cos(-angle) + dy*Math.sin(-angle);
+				newY = center.x - dx*Math.sin(-angle) - dy*Math.cos(-angle);
+				tmp5.x = (int)newX;
+				tmp5.y = (int)newY;
+				
 				checkInterruption();
 				if((position.x==s.currentX && position.y==s.currentY) && (position2.x==s.currentX && position2.y==s.currentY))
 				{
 					return 2;
 				}
 				if()
+				{
+					
+				}
 			}
 		}
 		return 0;
