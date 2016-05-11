@@ -166,7 +166,7 @@ public class AgentImpl extends Agent
 			currentAngle+=2*Math.PI;
 	}
 	 
-	public double bestChoice(Board board, Set<Position> trail, Position pos, double val, boolean danger, double angle, Position posSnake, int niveau)
+	public double bestChoice(Board board, Set<Position> trail, Position pos, double val, boolean danger, double angle, Position posSnake, int niveau, Position lastpos)
 	{
 		checkInterruption();
 		HashMap<Direction, Double > valeurDirection = new HashMap<Direction, Double >();
@@ -177,7 +177,7 @@ public class AgentImpl extends Agent
 			{
 				return resultat;
 			}
-			int res = getWhereSnake(pos,10, trail , board);
+			int res = getWhereSnake(pos, lastpos,10, trail , board);
 			if(res==0)
 				if(danger)
 					val+=0.5;
@@ -195,13 +195,13 @@ public class AgentImpl extends Agent
 		}
 		Pair<Position, Double> cpos = new Pair<Position, Double>();
 		cpos = calculatePosition(Direction.RIGHT, pos, angle);
-		valeurDirection.put(Direction.RIGHT, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond(),posSnake,niveau+1));
+		valeurDirection.put(Direction.RIGHT, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond(),posSnake,niveau+1, pos));
 		checkInterruption();
 		cpos = calculatePosition(Direction.LEFT, pos, angle);
-		valeurDirection.put(Direction.LEFT, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond(),posSnake,niveau+1));
+		valeurDirection.put(Direction.LEFT, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond(),posSnake,niveau+1, pos));
 		checkInterruption();
 		cpos = calculatePosition(Direction.NONE, pos, angle);
-		valeurDirection.put(Direction.NONE, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond(),posSnake,niveau+1));
+		valeurDirection.put(Direction.NONE, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond(),posSnake,niveau+1, pos));
 		checkInterruption();
 		double dist = Math.sqrt(
 				Math.pow(pos.x-cpos.getFirst().x, 2) 
