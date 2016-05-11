@@ -72,6 +72,8 @@ public class AgentImpl extends Agent
 	
 	private long startTime = 1000;
 	private Direction direction;
+	private int levelMax=6;
+	private Set<Direction> prevent;
 	/**
 	 * Crée un agent contrôlant le joueur spécifié
 	 * dans la partie courante.
@@ -143,6 +145,7 @@ public class AgentImpl extends Agent
 			System.out.println(startTime);
 			System.out.println("fin");
 			
+			
 			return direction;
 		}
 	}
@@ -167,7 +170,7 @@ public class AgentImpl extends Agent
 		{
 			return resultat;
 		}
-		if(niveau>=6) // nombre de tour de boucle max
+		if(niveau>=levelMax) // nombre de tour de boucle max
 		{
 			return resultat;
 		}
@@ -221,9 +224,31 @@ public class AgentImpl extends Agent
 			direction = Direction.NONE;
 		}
 		if(niveau==0)
+		{
 			System.out.println(valeurDirection);
+			preventChoice(valeurDirection);
+		}
 			
 		return resultat;
+	}
+	
+	void preventChoice(HashMap<Direction, Double >  valeurDirection){
+		double none=valeurDirection.get(Direction.NONE);
+		double right=valeurDirection.get(Direction.RIGHT);
+		double left=valeurDirection.get(Direction.LEFT);
+		if(none<right-0.5 || none<left-0.5)
+		{
+			prevent.add(Direction.NONE);
+		}
+		if(left<right-0.5 || left<none-0.5)
+		{
+			prevent.add(Direction.LEFT);
+
+		}
+		if(right<none-0.5 || right<left-0.5)
+		{
+			prevent.add(Direction.RIGHT);
+		}
 	}
 	
 	private boolean isInCorner(Position position, Board board)
