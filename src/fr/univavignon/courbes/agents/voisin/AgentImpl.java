@@ -1,3 +1,4 @@
+
 package fr.univavignon.courbes.agents.voisin;
 
 /*
@@ -61,7 +62,7 @@ public class AgentImpl extends Agent
 	/** Temps avant que l'agent ne change de direction */ 
 	private long timeBeforeDirChange = 0;
 
-	public int getWhereSnake(Position position, int val, set<Position>trail)
+	public int getWhereSnake(Position position, Position position2, int val, Set<Position>trail)
 	{	
 		checkInterruption();	// on doit tester l'interruption au début de chaque méthode
 		Board board=getBoard();
@@ -72,12 +73,12 @@ public class AgentImpl extends Agent
 			if(s.playerId!=agentSnake.playerId)
 			{
 				//si on est sur lui, on renvoie 2
-				if(position.x==s.currentX && position.y==s.currentY)
+				if((position.x==s.currentX && position.y==s.currentY) && (position2.x==s.currentX && position2.y==s.currentY))
 				{
 					return 2;
 				}
 				//si on est dans son rayon d'action (prédeterminé)
-				if(Math.sqrt((Math.pow((s.currentX-position.x), 2))-(Math.pow((s.currentY-position.y), 2)))<val)
+				if((Math.sqrt((Math.pow((s.currentX-position.x), 2))-(Math.pow((s.currentY-position.y), 2)))<val) && (Math.sqrt((Math.pow((s.currentX-position2.x), 2))-(Math.pow((s.currentY-position2.y), 2)))<val))
 				{
 					return 1;
 				}
@@ -85,7 +86,7 @@ public class AgentImpl extends Agent
 			for(Position pos: trail)
 			{
 				checkInterruption();
-				if(position.x==s.currentX && position.y==s.currentY)
+				if((position.x==s.currentX && position.y==s.currentY) && (position2.x==s.currentX && position2.y==s.currentY))
 				{
 					return 2;
 				}
@@ -141,7 +142,12 @@ public class AgentImpl extends Agent
 		checkInterruption();
 		HashMap<Direction, Double > valeurDirection = new HashMap<Direction, Double >();
 		HashMap<Direction, Double > resultat = new HashMap<Direction, Double >();
-		int res = getWhereSnake(pos,10);
+		if(val>100)
+		{
+			resultat.put(Direction.NONE,0.0);
+			return resultat;
+		}
+		int res = getWhereSnake(pos,10,trail);
 		if(res==0)
 			if(danger)
 				val+=0.5;
@@ -158,12 +164,12 @@ public class AgentImpl extends Agent
 			return resultat;
 		}
 		
-		Pair<Position, Double> cpos = calculatedPosition(Direction.RIGHT, pos, angle);
-		valeurDirection.putAll(bestChoice(board, trail, cpos.first, val, danger, cpos.second));
-		cpos = calculatedPosition(Direction.LEFT, pos, angle);
-		valeurDirection.putAll(bestChoice(board, trail, cpos.first, val, danger, cpos.second));
-		cpos = calculatedPosition(Direction.NONE, pos, angle);
-		valeurDirection.putAll(bestChoice(board, trail, cpos.first, val, danger, cpos.second));
+		Pair<Position, Double> cpos = calculatePosition(Direction.RIGHT, pos, angle);
+		valeurDirection.putAll(bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond()));
+		cpos = calculatePosition(Direction.LEFT, pos, angle);
+		valeurDirection.putAll(bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond()));
+		cpos = calculatePosition(Direction.NONE, pos, angle);
+		valeurDirection.putAll(bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond()));
 		if(valeurDirection.get(Direction.RIGHT)>valeurDirection.get(Direction.LEFT) && valeurDirection.get(Direction.RIGHT)>valeurDirection.get(Direction.NONE))
 			resultat.put(Direction.RIGHT,valeurDirection.get(Direction.RIGHT)); 
 		else if(valeurDirection.get(Direction.LEFT)>valeurDirection.get(Direction.RIGHT) && valeurDirection.get(Direction.LEFT)>valeurDirection.get(Direction.NONE))
@@ -215,5 +221,24 @@ public class AgentImpl extends Agent
 		}
 	}
 	
+	public Pair<Position, Double> calculatePosition(Direction d, Position p, double angle){
+		
+		double finalAngle = angle*Math.PI/180;
+		float distance = startTime*agentSnake.movingSpeed;
+		
+		if(d == Direction.LEFT )
+			finalAngle = finalAngle + (agentSnake.turningSpeed*startTime);
+		else if(d == Direction.RIGHT)
+			finalAngle = finalAngle - (agentSnake.turningSpeed*startTime);
+		
+		double x = distance*Math.cos(finalAngle);
+		double y = distance*Math.sin(finalAngle);
+		
+		Position finalPosition = new Position((int)Math.round(p.x+x), (int)Math.round(p.y+y));
+		
+		Pair<Position, Double> pair = new Pair<Position, Double>(finalPosition, angle);
+		
+		return pair;
+	}
 	
 }
