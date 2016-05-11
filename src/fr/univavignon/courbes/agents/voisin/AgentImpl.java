@@ -87,7 +87,7 @@ public class AgentImpl extends Agent
 	/** Serpent contrôlé par l'agent */
 	private Snake agentSnake;
 
-<<<<<<< HEAD
+
 	public int getWhereSnake(Position position, Position position2, int val, Set<Position>trail)
 	{	
 		checkInterruption();	// on doit tester l'interruption au début de chaque méthode
@@ -117,49 +117,7 @@ public class AgentImpl extends Agent
 					return 2;
 				}
 			}
-=======
 
-	public int getWhereSnake(Position position, int val, Set<Position>trail, Board board)
-	{	
-		checkInterruption();	// on doit tester l'interruption au début de chaque méthode
-		for(Snake s: board.snakes)
-		{
-			checkInterruption();
-			//Check si le serpent testé n'est pas l'agent.
-			if(s.playerId!=agentSnake.playerId)
-			{
-				//si on est sur lui, on renvoie 2
-				if(position.x==s.currentX && position.y==s.currentY)
-				{
-					return 2;
-				}
-				//si on est dans son rayon d'action (prédeterminé)
-				if(Math.sqrt((Math.pow((s.currentX-position.x), 2))-(Math.pow((s.currentY-position.y), 2)))<val)
-				{
-					return 1;
-				}
-			}
-			if(position.x<0 || position.y<0 || position.x>board.width || position.y>board.height)
-				return 2;
-			for(Position pos: trail)
-			{
-				checkInterruption();
-				if(position.x==s.currentX && position.y==s.currentY)
-				{
-					return 2;
-				}
-			}
->>>>>>> branch 'master' of https://github.com/Tazam/Projet2015.git
-		}
-		return 0;
-	}
-<<<<<<< HEAD
-=======
-	
-	
-
-	
->>>>>>> branch 'master' of https://github.com/Tazam/Projet2015.git
 
 	@Override
 	public Direction processDirection() {
@@ -208,14 +166,12 @@ public class AgentImpl extends Agent
 		double resultat = val;
 		if(pos!=posSnake)
 		{
-<<<<<<< HEAD
 			resultat.put(Direction.NONE,0.0);
 			return resultat;
 		}
 		int res = getWhereSnake(pos,10,trail);
 		if(res==0)
 			if(danger)
-=======
 			if(niveau>=6) // nombre de tour de boucle max
 			{
 				return resultat;
@@ -228,7 +184,6 @@ public class AgentImpl extends Agent
 					val++;
 			if(res==1)
 			{
->>>>>>> branch 'master' of https://github.com/Tazam/Projet2015.git
 				val+=0.5;
 				danger=true;
 			}
