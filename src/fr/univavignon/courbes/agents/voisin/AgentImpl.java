@@ -53,6 +53,7 @@ import java.util.TreeSet;
 import fr.univavignon.courbes.agents.Agent;
 import fr.univavignon.courbes.common.Board;
 import fr.univavignon.courbes.common.Direction;
+import fr.univavignon.courbes.common.ItemInstance;
 import fr.univavignon.courbes.common.Position;
 import fr.univavignon.courbes.common.Snake;
 
@@ -72,6 +73,8 @@ public class AgentImpl extends Agent
 	
 	private long startTime = 1000;
 	private Direction direction;
+	private int levelMax=6;
+	private Set<Direction> prevent;
 	/**
 	 * Crée un agent contrôlant le joueur spécifié
 	 * dans la partie courante.
@@ -152,6 +155,21 @@ public class AgentImpl extends Agent
 			System.out.println(startTime);
 			System.out.println("fin");
 			
+			// si l'agent est sous le malus inverse on inverse ses choix de direction.
+			if(agentSnake.inversion)
+			{
+				if(direction==Direction.RIGHT)
+				{
+					return Direction.LEFT;
+				}
+				
+				if(direction==Direction.LEFT)
+				{
+					return Direction.RIGHT;
+				}
+			}
+			
+			
 			return direction;
 		}
 	}
@@ -176,7 +194,7 @@ public class AgentImpl extends Agent
 		{
 			return resultat;
 		}
-		if(niveau>=6) // nombre de tour de boucle max
+		if(niveau>=levelMax) // nombre de tour de boucle max
 		{
 			return resultat;
 		}
@@ -230,9 +248,31 @@ public class AgentImpl extends Agent
 			direction = Direction.NONE;
 		}
 		if(niveau==0)
+		{
 			System.out.println(valeurDirection);
+			preventChoice(valeurDirection);
+		}
 			
 		return resultat;
+	}
+	
+	void preventChoice(HashMap<Direction, Double >  valeurDirection){
+		double none=valeurDirection.get(Direction.NONE);
+		double right=valeurDirection.get(Direction.RIGHT);
+		double left=valeurDirection.get(Direction.LEFT);
+		if(none<right-0.5 || none<left-0.5)
+		{
+			prevent.add(Direction.NONE);
+		}
+		if(left<right-0.5 || left<none-0.5)
+		{
+			prevent.add(Direction.LEFT);
+
+		}
+		if(right<none-0.5 || right<left-0.5)
+		{
+			prevent.add(Direction.RIGHT);
+		}
 	}
 	
 	private boolean isInCorner(Position position, Board board)
@@ -276,6 +316,86 @@ public class AgentImpl extends Agent
 		Pair<Position, Double> pair = new Pair<Position, Double>(finalPosition, angle);
 		
 		return pair;
+	}
+	
+////////////////////////////////////////////////////////////////
+////TRAITEMENT DES BONUS
+////////////////////////////////////////////////////////////////
+/**
+* Choisi un bonus.
+* @param var contient un int qui influ sur la note suivant la situation du snake.
+* @return un tableau d'int qui va contenir les coordonées des bonus x en [0][] r=et y en [1][];
+*/
+
+private int[][] processBonus(int var)
+{
+	checkInterruption();	// on doit tester l'interruption au début de chaque méthode
+
+
+	int k=0;
+	// on compte le nombre de bonus
+	for (ItemInstance i: getBoard().items)
+	{
+		checkInterruption();	// une boucle, donc un autre test d'interruption
+		k++;
+	}
+	// va contenir les coordonées des bonus x en [0][] r=et y en [1][]; une note sera attribué en [2][]
+	int result[][]= new int[3][k];
+	k=0;
+
+
+
+	for (ItemInstance i: getBoard().items)
+	{
+		checkInterruption();	// une boucle, donc un autre test d'interruption
+		result[0][k]=i.x;
+		result[1][k]=i.y;
+		
+		// on attribue une note selon le type de bonus
+		switch(i.type)
+		{	case OTHERS_FAST:
+			result[2][k]=1;
+			break;
+		case OTHERS_REVERSE:
+			result[2][k]=500;
+			break;
+		case OTHERS_THICK:
+			result[2][k]=3;
+			break;
+		case OTHERS_SLOW:
+			result[2][k]=400;
+			break;
+		case USER_FAST:
+			result[2][k]=5;
+			break;
+		case USER_FLY:
+			result[2][k]=500;
+			break;
+		case USER_SLOW:
+			result[2][k]=10;
+			break;
+		}
+		// la note est modifier selon la distance entre les differents serpent et le bonus.
+		if(horsPortee(i))
+		{
+			result[2][k]+=-1000;
+		}
+		
+		
+		k++;
+	}
+
+	return result;
+
+}
+
+	/**
+	 * @param i est l'item que l'on test
+	 * @return true si l'agent ne peut pas atteindre le bonus.
+	 */
+	private boolean horsPortee(ItemInstance i)
+	{
+		return true;
 	}
 	
 }

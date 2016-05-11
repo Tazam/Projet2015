@@ -248,7 +248,6 @@ public class AgentImpl extends Agent{
 		int result[][]= new int[3][k];
 		k=0;
 		
-
 		
 			
 		for (ItemInstance i: getBoard().items)
@@ -258,25 +257,25 @@ public class AgentImpl extends Agent{
 			result[1][k]=i.y;
 			switch(i.type)
 			{	case OTHERS_FAST:
-					
+					result[2][k]=1;
 					break;
 				case OTHERS_REVERSE:
-					
+					result[2][k]=2;
 					break;
 				case OTHERS_THICK:
-					
+					result[2][k]=3;
 					break;
 				case OTHERS_SLOW:
-					
+					result[2][k]=4;
 					break;
 				case USER_FAST:
-					
+					result[2][k]=5;
 					break;
 				case USER_FLY:
-					
+					result[2][k]=6;
 					break;
 				case USER_SLOW:
-					
+					result[2][k]=7;
 					break;
 			}
 			k++;
