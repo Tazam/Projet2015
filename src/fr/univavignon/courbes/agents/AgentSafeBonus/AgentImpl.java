@@ -9,8 +9,10 @@ import javax.swing.UIManager.LookAndFeelInfo;
 
 import fr.univavignon.courbes.agents.Agent;
 import fr.univavignon.courbes.common.Board;
+import fr.univavignon.courbes.common.Constants;
 import fr.univavignon.courbes.common.Direction;
 import fr.univavignon.courbes.common.ItemInstance;
+import fr.univavignon.courbes.common.ItemType;
 import fr.univavignon.courbes.common.Position;
 import fr.univavignon.courbes.common.Snake;
 import fr.univavignon.courbes.inter.simpleimpl.MainWindow;
@@ -79,7 +81,7 @@ public class AgentImpl extends Agent{
 					// du serpent contrôlé par cet agent (entre 0 et 2PI)
 					double closestObstacle[] = {Double.POSITIVE_INFINITY, 0};
 					
-					int bonus[] ={0,0};
+					int[][] bonus;
 					
 					// pour chaque serpent
 					for(int i=0;i<board.snakes.length;++i)
@@ -96,7 +98,7 @@ public class AgentImpl extends Agent{
 					processObstacleBorder(closestObstacle);
 					
 					//on cherche le bonus le plus favorable
-					processBonus(bonus);
+					bonus=processBonus(2);
 					
 					
 					// on prend une direction de manière à aller prendre le bonus en évitant les obstacles
@@ -226,24 +228,61 @@ public class AgentImpl extends Agent{
 ////////////////////////////////////////////////////////////////
 	/**
 	 * Choisi un bonus.
-	 * @param result
-	 * 		Un tableau de réel contenant les coordonnées du bonus choisi
+	 * @param var contient un int qui influ sur la note suivant la situation du snake.
+	 * @return un tableau d'int qui va contenir les coordonées des bonus x en [0][] r=et y en [1][];
 	 */
 	
-	private void processBonus(int result[])
+	private int[][] processBonus(int var)
 	{
 		checkInterruption();	// on doit tester l'interruption au début de chaque méthode
 		
-		// va contenir les coordonées des bonus x en [0][] r=et y en [1][];
-		int mapBonus[][]={{},{}};
+		
 		int k=0;
+		// on compte le nombre de bonus
 		for (ItemInstance i: getBoard().items)
 		{
-			mapBonus[0][k]=i.x;
-			mapBonus[1][k]=i.y;
+			checkInterruption();	// une boucle, donc un autre test d'interruption
+			k++;
+		}
+		// va contenir les coordonées des bonus x en [0][] r=et y en [1][]; une note sera attribué en [2][]
+		int result[][]= new int[3][k];
+		k=0;
+		
+
+		
+			
+		for (ItemInstance i: getBoard().items)
+		{
+			checkInterruption();	// une boucle, donc un autre test d'interruption
+			result[0][k]=i.x;
+			result[1][k]=i.y;
+			switch(i.type)
+			{	case OTHERS_FAST:
+					
+					break;
+				case OTHERS_REVERSE:
+					
+					break;
+				case OTHERS_THICK:
+					
+					break;
+				case OTHERS_SLOW:
+					
+					break;
+				case USER_FAST:
+					
+					break;
+				case USER_FLY:
+					
+					break;
+				case USER_SLOW:
+					
+					break;
+			}
+			k++;
 		}
 		
-		
+		return result;
 		 
 	}
 	
