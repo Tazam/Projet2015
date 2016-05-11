@@ -67,7 +67,6 @@ public class AgentImpl extends Agent
 	private static double ANGLE_WIDTH = Math.PI/2;
 	/** Distance en pixels à partir de laquelle on considère qu'on est dans un coin */
 	private static int CORNER_THRESHOLD = 100;
-	private Set<Position> border = new TreeSet<Position>();
 	/** Direction courante du serpent de l'agent */
 	private double currentAngle;
 	
@@ -130,12 +129,10 @@ public class AgentImpl extends Agent
 			return null;
 		else
 		{
-			if(border.size()==0)
-				ObstacleBorder(board);
 			if(agentSnake==null)
 				agentSnake = board.snakes[getPlayerId()];
 			updateAngles();
-			Set<Position> trail = new TreeSet<Position>(border);
+			Set<Position> trail = new TreeSet<Position>();
 			Position posSnake = new Position(agentSnake.currentX,agentSnake.currentY);
 			getObstacle(board, trail);
 			System.out.println("debut");
@@ -145,6 +142,7 @@ public class AgentImpl extends Agent
 			startTime=(System.currentTimeMillis()-time+startTime)/2;
 			System.out.println(startTime);
 			System.out.println("fin");
+			
 			return direction;
 		}
 	}
@@ -250,24 +248,6 @@ public class AgentImpl extends Agent
 		}
 	}
 	
-	private void ObstacleBorder(Board board)
-	{	
-		checkInterruption();
-		for(int i =0; i<getBoard().width ; i++ )
-		{	
-			Position pos = new Position(i,0);
-			Position pos2 = new Position(i,800);
-			border.add(pos);
-			border.add(pos2);			
-		}
-		for(int i =0; i<board.height ; i++ )
-		{	
-			Position pos = new Position(0,i);
-			Position pos2 = new Position(800,i);
-			border.add(pos);
-			border.add(pos2);
-		}
-	}
 	
 	public Pair<Position, Double> calculatePosition(Direction d, Position p, double angle){
 		checkInterruption();
