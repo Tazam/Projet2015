@@ -93,43 +93,71 @@ public class AgentImpl extends Agent
 	public int getWhereSnake(Position position, Position position2, int val, Set<Position>trail, Board board)
 	{	
 		checkInterruption();	// on doit tester l'interruption au début de chaque méthode
+		
+		//----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		
+		//on créé l'angle pour placer le rectangle et le faire tourner plus tard
 		double angle= Math.atan2(position.y - position2.y, position.x - position2.x);
 		double angle2=angle+Math.PI/2;
 		double a = agentSnake.headRadius*Math.cos(angle2);
 		double b = agentSnake.headRadius*Math.sin(angle2);
-		Position tmp1=new Position((int)(position.x+a),(int)(position.y+b));
-		Position tmp2=new Position((int)(position.x-a),(int)(position.y-b));
-		Position tmp3=new Position((int)(position2.x+a),(int)(position2.y+b));
-		Position tmp4=new Position((int)(position2.x-a),(int)(position2.y-b));
-		Position center = new Position((tmp1.x+tmp4.x)/2, (tmp1.y+tmp4.y)/2);
 		
-		int dx = tmp1.x - center.x;
-		int dy = tmp1.y - center.y;
+		// on positionne les points du rectangle
+		Position tmp[] = new Position[4];
+		tmp[0]=new Position((int)(position.x+a),(int)(position.y+b));
+		tmp[1]=new Position((int)(position.x-a),(int)(position.y-b));
+		tmp[2]=new Position((int)(position2.x+a),(int)(position2.y+b));
+		tmp[3]=new Position((int)(position2.x-a),(int)(position2.y-b));
+		
+		// on trouve son centre pour faire des rotations plus tard
+		Position center = new Position((tmp[0].x+tmp[3].x)/2, (tmp[0].y+tmp[3].y)/2);
+		
+		// on fait tourner les points un à un
+		int dx = tmp[0].x - center.x;
+		int dy = tmp[0].y - center.y;
 		double newX = center.x - dx*Math.cos(-angle) + dy*Math.sin(-angle);
 		double newY = center.x - dx*Math.sin(-angle) - dy*Math.cos(-angle);
-		tmp1.x = (int)newX;
-		tmp1.y = (int)newY;
+		tmp[0].x = (int)newX;
+		tmp[0].y = (int)newY;
 		
-		dx = tmp2.x - center.x;
-		dy = tmp2.y - center.y;
+		dx = tmp[1].x - center.x;
+		dy = tmp[1].y - center.y;
 		newX = center.x - dx*Math.cos(-angle) + dy*Math.sin(-angle);
 		newY = center.x - dx*Math.sin(-angle) - dy*Math.cos(-angle);
-		tmp2.x = (int)newX;
-		tmp2.y = (int)newY;
+		tmp[1].x = (int)newX;
+		tmp[1].y = (int)newY;
 		
-		dx = tmp3.x - center.x;
-		dy = tmp3.y - center.y;
+		dx = tmp[2].x - center.x;
+		dy = tmp[2].y - center.y;
 		newX = center.x - dx*Math.cos(-angle) + dy*Math.sin(-angle);
 		newY = center.x - dx*Math.sin(-angle) - dy*Math.cos(-angle);
-		tmp3.x = (int)newX;
-		tmp3.y = (int)newY;
+		tmp[2].x = (int)newX;
+		tmp[2].y = (int)newY;
 		
-		dx = tmp4.x - center.x;
-		dy = tmp4.y - center.y;
+		dx = tmp[3].x - center.x;
+		dy = tmp[3].y - center.y;
 		newX = center.x - dx*Math.cos(-angle) + dy*Math.sin(-angle);
 		newY = center.x - dx*Math.sin(-angle) - dy*Math.cos(-angle);
-		tmp4.x = (int)newX;
-		tmp4.y = (int)newY;
+		tmp[3].x = (int)newX;
+		tmp[3].y = (int)newY;
+		
+		// on récupère les deux coins extrèmes		
+		Position corner1, corner2;
+		int min=0, max=0;
+		
+		for(int i=0;i<tmp.length;i++){
+			if(tmp[i].x < tmp[min].x && tmp[i].y < tmp[min].y){
+				min = i;
+			}
+			if(tmp[i].x > tmp[max].x && tmp[i].y > tmp[max].y){
+				max = 1;
+			}
+		}
+		
+		corner1 = new Position(tmp[min]);
+		corner2 = new Position(tmp[max]);
+		
+		//----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		
 		for(Snake s: board.snakes)
 		{
@@ -150,23 +178,35 @@ public class AgentImpl extends Agent
 			}
 			for(Position pos: trail)
 			{
-				Position tmp5 = new Position(pos);
-				dx = tmp5.x - center.x;
-				dy = tmp5.y - center.y;
+				//----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+				
+				// on créé une nouvelle position pas copie de la trail, pour pouvoir lui faire une rotation sans modifier la variable pos
+				Position trailPosTmp = new Position(pos);
+				dx = trailPosTmp.x - center.x;
+				dy = trailPosTmp.y - center.y;
 				newX = center.x - dx*Math.cos(-angle) + dy*Math.sin(-angle);
 				newY = center.x - dx*Math.sin(-angle) - dy*Math.cos(-angle);
-				tmp5.x = (int)newX;
-				tmp5.y = (int)newY;
+				trailPosTmp.x = (int)newX;
+				trailPosTmp.y = (int)newY;
+				
+				//----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 				
 				checkInterruption();
 				if((position.x==s.currentX && position.y==s.currentY) && (position2.x==s.currentX && position2.y==s.currentY))
 				{
 					return 2;
 				}
-				if()
+				
+				//----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+				
+				//on vérifie que la trail est dans le rectangle
+				if(trailPosTmp.x >= corner1.x && trailPosTmp.x <= corner2.x && trailPosTmp.y >= corner1.y && trailPosTmp.y <= corner2.y)
 				{
-					
+					return 2;
 				}
+				
+				//----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+				
 			}
 		}
 		return 0;
