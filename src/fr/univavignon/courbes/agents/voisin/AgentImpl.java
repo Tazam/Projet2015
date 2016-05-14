@@ -84,7 +84,7 @@ public class AgentImpl extends Agent
 			System.out.println("POSSNAKE="+posSnake);
 			getObstacle(board, trail);
 			System.out.println("debut");
-			bestChoice(board, trail,posSnake,0, false, currentAngle, posSnake, 0, posSnake);
+			double val = bestChoice(board, trail,posSnake,0, false, currentAngle, posSnake, 0, posSnake);
 
 			
 			// si l'agent est sous le malus inverse on inverse ses choix de direction.
@@ -103,12 +103,11 @@ public class AgentImpl extends Agent
 			if( board.state==State.REGULAR&& trail.size()>1000)
 				startTime=(System.currentTimeMillis()-time+startTime)/2;
 			System.out.println("time="+startTime+" niveau max="+levelMax);
+			System.out.println("tourne "+direction);	
 			System.out.println("fin");		
-			if(startTime<100 && board.state==State.REGULAR && trail.size()>1000 && levelMax>5)
+			if(startTime>300 && board.state==State.REGULAR && trail.size()>1000 && levelMax>3)
 				levelMax--;
-			else if(startTime>300 && board.state==State.REGULAR && trail.size()>1000 && levelMax>3)
-				levelMax--;
-			else if(startTime<100 && board.state==State.REGULAR && trail.size()>1000 && levelMax<7)
+			else if(startTime<100 && board.state==State.REGULAR && trail.size()>1000 && levelMax<8 && val>=levelMax-2)
 				levelMax++;
 			return direction;
 		}
@@ -119,6 +118,17 @@ public class AgentImpl extends Agent
 		checkInterruption();	// on doit tester l'interruption au début de chaque méthode
 		
 		//----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		//on ne peut pas toucher sa propre tete
+		for (Position mytrail : agentSnake.newTrail)
+		{
+			if((Math.sqrt((Math.pow((mytrail.x-position.x), 2))-(Math.pow((mytrail.y-position.y), 2)))<agentSnake.headRadius) && (Math.sqrt((Math.pow((mytrail.x-position2.x), 2))-(Math.pow((mytrail.y-position2.y), 2)))<agentSnake.headRadius))
+			{
+				return 0;
+			}
+			
+		}
+		
+		
 		if(position.x<0 || position.y<0 || position.x>board.width || position.y > board.height)
 		{
 			return 2;
@@ -220,15 +230,18 @@ public class AgentImpl extends Agent
 				//----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 				
 				checkInterruption();
-				/*if((position.x==s.currentX && position.y==s.currentY) && (position2.x==s.currentX && position2.y==s.currentY))
-				{
-					return 2;
-				}*/
-				
+
 				//----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 				
+				//TODO verifier la formule
 				//on vérifie que la trail est dans le rectangle
 				if(trailPosTmp.x >= corner1.x && trailPosTmp.x <= corner2.x && trailPosTmp.y >= corner1.y && trailPosTmp.y <= corner2.y)
+				{
+					return 2;
+				}
+				
+				//TODO  m'expliquer comment on arrive là ....
+				if((position.x==s.currentX && position.y==s.currentY) && (position2.x==s.currentX && position2.y==s.currentY))
 				{
 					return 2;
 				}
@@ -286,17 +299,29 @@ public class AgentImpl extends Agent
 			}
 			if(res==2)//on risque de mourir
 			{
+				if(niveau<=3)
+				{
+					double ok = startTime*agentSnake.movingSpeed*niveau;
+					System.out.println("il y a un obstacle entre "+pos+" et "+lastpos+" distance parcourue depuis la snake = "+ok);
+					
+				}
 				return resultat;
 			}
 		}
 		Pair<Position, Double> cpos = new Pair<Position, Double>();
 		cpos = calculatePosition(Direction.RIGHT, pos, angle);
+		if(niveau<=1)
+			System.out.println("test Position RIGHT niveau="+niveau);
 		valeurDirection.put(Direction.RIGHT, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond(),posSnake,niveau+1, pos));
 		checkInterruption();
 		cpos = calculatePosition(Direction.LEFT, pos, angle);
+		if(niveau<=1)
+			System.out.println("test Position LEFT niveau="+niveau);
 		valeurDirection.put(Direction.LEFT, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond(),posSnake,niveau+1, pos));
 		checkInterruption();
 		cpos = calculatePosition(Direction.NONE, pos, angle);
+		if(niveau<=1)
+			System.out.println("test Position NONE niveau="+niveau);
 		valeurDirection.put(Direction.NONE, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond(),posSnake,niveau+1, pos));
 		checkInterruption();
 		
