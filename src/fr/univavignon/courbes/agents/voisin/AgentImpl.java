@@ -44,7 +44,7 @@ public class AgentImpl extends Agent
 {
 	/** Direction courante du serpent de l'agent */
 	private double currentAngle;
-	
+	private boolean affichage =true;
 	/**
 	 * temps nécessaire pour choisir une direction
 	 */
@@ -52,11 +52,13 @@ public class AgentImpl extends Agent
 	/**
 	 * direction choisie
 	 */
-	private Direction direction;
+	private Set<Position> border=null;
+	private Direction direction=Direction.NONE;
+	private Direction lastdirection=Direction.NONE;
 	/**
 	 * Nombre de récursivité maximum
 	 */
-	private int levelMax=5;
+	private int levelMax=7;
 	/**
 	 * Liste des direction ou il ne faut pas aller
 	 */
@@ -86,15 +88,22 @@ public class AgentImpl extends Agent
 			return Direction.NONE;
 		else
 		{
+			if(border==null)
+			{
+				border= new TreeSet<Position>();
+				getBorder(board);
+			}
 			long time=0;
 			if( board.state==State.REGULAR)
 				time = System.currentTimeMillis();
 			agentSnake = board.snakes[getPlayerId()];
 			updateAngles();
-			Set<Position> trail = new TreeSet<Position>();
+			Set<Position> trail = new TreeSet<Position>(border);
 			Position posSnake = new Position(agentSnake.currentX,agentSnake.currentY);
+			if(affichage)
 			System.out.println("POSSNAKE="+posSnake);
 			getObstacle(board, trail);
+			if(affichage)
 			System.out.println("debut");
 			double val = bestChoice(board, trail,posSnake,0, currentAngle, posSnake, 0, posSnake);
 
@@ -114,14 +123,17 @@ public class AgentImpl extends Agent
 			}
 			if( board.state==State.REGULAR&& trail.size()>1000)
 				startTime=(System.currentTimeMillis()-time+startTime)/2;
+			if(affichage)
+			{
 			System.out.println("time="+startTime+" niveau max="+levelMax);
 			System.out.println("tourne "+direction);	
 			System.out.println("fin");	
-			
+			}
 			if(startTime>400 && board.state==State.REGULAR && trail.size()>1000 && levelMax>3)
 				levelMax--;
-			else if(startTime<200 && board.state==State.REGULAR && trail.size()>1000 && levelMax<8 && val>=levelMax-2)
+			else if(startTime<100 && board.state==State.REGULAR && trail.size()>1000 && levelMax<8 && val>=levelMax-2)
 				levelMax++;
+			lastdirection=direction;
 			return direction;
 		}
 	}
@@ -146,12 +158,7 @@ public class AgentImpl extends Agent
 				return true;
 			}	
 		}
-		if(position.x<0 || position.y<0 || position.x>board.width || position.y > board.height)
-		{
-			double distance= Math.sqrt(	Math.pow(agentSnake.currentX-position.x, 2) + Math.pow(agentSnake.currentY-position.y,2));
-			System.out.println("on fonce dans le mur pos="+position+"  a une distance de "+distance);
-			return false;
-		}
+
 		//on créé l'angle pour placer le rectangle et le faire tourner plus tard
 		double angle= Math.atan2(position.y - position2.y, position.x - position2.x);
 		double angle2=angle+Math.PI/2;
@@ -242,6 +249,7 @@ public class AgentImpl extends Agent
 					double distance= Math.sqrt(	Math.pow(agentSnake.currentX-pos.x, 2) + Math.pow(agentSnake.currentY-pos.y,2));
 					if(distance>agentSnake.headRadius)
 					{
+						if(affichage)
 						System.out.println("distance= "+ distance+"  meurt ici ->"+pos+" situé entre "+position+ " et "+position2);
 						return false;
 					}
@@ -280,8 +288,6 @@ public class AgentImpl extends Agent
 		checkInterruption();
 		HashMap<Direction, Double > valeurDirection = new HashMap<Direction, Double >();
 		double resultat = val;
-		//TODO ici
-
 		if(niveau>=levelMax) // nombre de tour de boucle max
 		{
 			return resultat;
@@ -295,8 +301,6 @@ public class AgentImpl extends Agent
 			}
 			else//on risque de mourir
 			{
-				if(niveau<=2)
-				System.out.println("mort niveau="+niveau);
 				return resultat;
 			}
 		}
@@ -304,37 +308,35 @@ public class AgentImpl extends Agent
 		Pair<Position, Double> cpos = new Pair<Position, Double>();
 		cpos = calculatePosition(Direction.RIGHT, pos, angle);
 		if(niveau<=2)
-		System.out.println("niveau="+niveau+ "  direction=RIGHT");
+			System.out.println("niveau="+niveau+ "  direction=RIGHT");
 		valeurDirection.put(Direction.RIGHT, bestChoice(board, trail, cpos.getFirst(), resultat, cpos.getSecond(),posSnake,niveau+1, pos));
-		checkInterruption();
 		cpos = calculatePosition(Direction.LEFT, pos, angle);
 		if(niveau<=2)
-		System.out.println("niveau="+niveau+ "  direction=LEFT");
+			System.out.println("niveau="+niveau+ "  direction=LEFT");
 		valeurDirection.put(Direction.LEFT, bestChoice(board, trail, cpos.getFirst(), resultat, cpos.getSecond(),posSnake,niveau+1, pos));
-		checkInterruption();
 		cpos = calculatePosition(Direction.NONE, pos, angle);
 		if(niveau<=2)
-		System.out.println("niveau="+niveau+ "  direction=NONE");
+			System.out.println("niveau="+niveau+ "  direction=NONE");
 		valeurDirection.put(Direction.NONE, bestChoice(board, trail, cpos.getFirst(), resultat, cpos.getSecond(),posSnake,niveau+1, pos));
-		checkInterruption();
-		
-		if(valeurDirection.get(Direction.NONE)>=valeurDirection.get(Direction.RIGHT) && valeurDirection.get(Direction.NONE)>=valeurDirection.get(Direction.LEFT))
-		{
-			resultat = valeurDirection.get(Direction.NONE);
-			direction = Direction.NONE;
-		}
-		else if(valeurDirection.get(Direction.RIGHT)>=valeurDirection.get(Direction.LEFT) && valeurDirection.get(Direction.RIGHT)>=valeurDirection.get(Direction.NONE))
+		 if(valeurDirection.get(Direction.RIGHT)>=valeurDirection.get(Direction.LEFT) && valeurDirection.get(Direction.RIGHT)>=valeurDirection.get(Direction.NONE))
 		{
 			resultat = valeurDirection.get(Direction.RIGHT);
 			direction = Direction.RIGHT;
 		}
+		 else if(valeurDirection.get(Direction.LEFT)>=valeurDirection.get(Direction.RIGHT) && valeurDirection.get(Direction.LEFT)>=valeurDirection.get(Direction.NONE))
+		{
+			resultat = valeurDirection.get(Direction.LEFT);
+			direction = Direction.LEFT;
+		}
+
 		else
 		{
-			resultat = valeurDirection.get(Direction.LEFT); 
-			direction = Direction.LEFT;
+			resultat = valeurDirection.get(Direction.NONE); 
+			direction = Direction.NONE;
 		}
 		if(niveau==0)
 		{
+			if(affichage)
 			System.out.println(valeurDirection);
 			//preventChoice(valeurDirection);
 		}
@@ -386,28 +388,47 @@ public class AgentImpl extends Agent
 	 * @param angle angle choisie
 	 * @return nouvelle position trouvé en fonction des 3 parametres
 	 */
-	public Pair<Position, Double> calculatePosition(Direction d, Position p, double angle){
-		checkInterruption();
-		double finalAngle = angle*Math.PI/180;
+	public Pair<Position, Double> calculatePosition(Direction d, Position p,  double angle)
+	{	// on considère la position courante comme le centre d'un repère polaire
+		// la nouvelle position est exprimée par l'angle courant et la distance couverte
+		// il suffit donc de convertir à des positions cartésiennes, puis de translater
+		
+		// distance parcourue dans le temps écoulé
 		float realTime=startTime;
-		if(realTime<150)
-			 realTime=150;
-			
-		float distance = realTime*agentSnake.movingSpeed;
+		if(realTime<100)
+			 realTime=100;
+		float dist = realTime*agentSnake.movingSpeed;
+		float delta = realTime*agentSnake.turningSpeed*d.value;
+		angle = (float)((angle + delta + 2*Math.PI) % (2*Math.PI));
+		// conversion de polaire vers cartésien
+		double tempX = dist*Math.cos(angle);
+		double tempY = dist*Math.sin(angle);
 		
-		if(d == Direction.LEFT )
-			finalAngle = finalAngle + (agentSnake.turningSpeed*startTime);
-		else if(d == Direction.RIGHT)
-			finalAngle = finalAngle - (agentSnake.turningSpeed*startTime);
-		
-		double x = distance*Math.cos(finalAngle);
-		double y = distance*Math.sin(finalAngle);
-		
-		Position finalPosition = new Position((int)Math.round(p.x+x), (int)Math.round(p.y+y));
-		
-		Pair<Position, Double> pair = new Pair<Position, Double>(finalPosition, angle);
+		// translation vers les coordonnées réelles de l'aire de jeu
+		float realX = p.x + (float)tempX;
+		float realY = p.y + (float)tempY;
+		Position result = new Position((int)Math.round(realX),(int)Math.round(realY));
+
+		Pair<Position, Double> pair = new Pair<Position, Double>(result, angle);
 		
 		return pair;
 	}
-
+	
+	public void getBorder(Board board)
+	{
+		for(int i=0; i<board.width; i++)
+		{
+			Position pos1=new Position(i,0);
+			Position pos2=new Position(i,board.height);
+			border.add(pos1);
+			border.add(pos2);
+		}
+		for(int i=0; i<board.height; i++)
+		{
+			Position pos1=new Position(0,i);
+			Position pos2=new Position(board.width-0,i);
+			border.add(pos1);
+			border.add(pos2);
+		}
+	}
 }
