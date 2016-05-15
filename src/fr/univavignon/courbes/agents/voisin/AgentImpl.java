@@ -302,7 +302,7 @@ public class AgentImpl extends Agent
 				if(niveau<=3)
 				{
 					double ok = startTime*agentSnake.movingSpeed*niveau;
-					System.out.println("il y a un obstacle entre "+pos+" et "+lastpos+" distance parcourue depuis la snake = "+ok);
+					System.out.println("il y a un obstacle entre "+lastpos+" et "+pos+" distance parcourue depuis la snake = "+ok);
 					
 				}
 				return resultat;
@@ -311,17 +311,17 @@ public class AgentImpl extends Agent
 		Pair<Position, Double> cpos = new Pair<Position, Double>();
 		cpos = calculatePosition(Direction.RIGHT, pos, angle);
 		if(niveau<=1)
-			System.out.println("test Position RIGHT niveau="+niveau);
+			System.out.println("test Position RIGHT niveau="+niveau+ "  position="+cpos.getFirst());
 		valeurDirection.put(Direction.RIGHT, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond(),posSnake,niveau+1, pos));
 		checkInterruption();
 		cpos = calculatePosition(Direction.LEFT, pos, angle);
 		if(niveau<=1)
-			System.out.println("test Position LEFT niveau="+niveau);
+			System.out.println("test Position LEFT niveau="+niveau+ "  position="+cpos.getFirst());
 		valeurDirection.put(Direction.LEFT, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond(),posSnake,niveau+1, pos));
 		checkInterruption();
 		cpos = calculatePosition(Direction.NONE, pos, angle);
 		if(niveau<=1)
-			System.out.println("test Position NONE niveau="+niveau);
+			System.out.println("test Position NONE niveau="+niveau+ "  position="+cpos.getFirst());
 		valeurDirection.put(Direction.NONE, bestChoice(board, trail, cpos.getFirst(), val, danger, cpos.getSecond(),posSnake,niveau+1, pos));
 		checkInterruption();
 		
