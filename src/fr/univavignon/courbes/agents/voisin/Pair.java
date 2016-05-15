@@ -30,6 +30,9 @@ public class Pair<U, V> {
 	        this.second = second;
 	    }
 	    
+	    /**
+	     * Constructeur par defaut
+	     */
 	    public Pair() {
 	    	
 	    }
