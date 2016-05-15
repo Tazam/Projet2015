@@ -416,10 +416,12 @@ public class AgentImpl extends Agent
 * @return un tableau d'int qui va contenir les coordonées des bonus x en [0][] r=et y en [1][]; si le nombre de bonus est de zero, resutl[0][0]==-1
 * sinon resutl[0][0] contien la taille;
 */
+	/*
 /**
  * @return un tableau d'int qui va contenir les coordonées des bonus x en [0][] r=et y en [1][]; si le nombre de bonus est de zero, resutl[0][0]==-1
 * sinon resutl[0][0] contien la taille;
  */
+	/*
 private int[][] processBonus()
 {
 	checkInterruption();	// on doit tester l'interruption au début de chaque méthode
@@ -483,7 +485,7 @@ private int[][] processBonus()
 	return result;
 
 }
-
+*/
 /*
 /**
  * @param var true si on veut un bonus defensif false pour un offensif
