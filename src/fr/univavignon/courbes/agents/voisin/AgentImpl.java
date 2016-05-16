@@ -49,8 +49,17 @@ public class AgentImpl extends Agent {
 	 */
 	private long startTime = 200;
 	/**
+	 * temps minimum pour une  decision
+	 */
+	private int timeMin = 150;
+	/**
+	 * temps maximum pour une  decision
+	 */
+	private int timeMax = 300;
+	/**
 	 * direction choisie
 	 */
+	private int CORNER_THRESHOLD = 150;
 	private Direction direction = Direction.NONE;
 	private Direction lastDirection = Direction.NONE;
 	/**
@@ -98,10 +107,13 @@ public class AgentImpl extends Agent {
 			updateAngles();
 			Set < Position > trail = new TreeSet < Position > (border);
 			Position posSnake = new Position(agentSnake.currentX, agentSnake.currentY);
-			System.out.println("POSSNAKE=" + posSnake);
 			getObstacle(board, trail);
 
 			double val = algoLocal(board, trail, posSnake, 0, currentAngle, posSnake, 0, posSnake);
+			if (board.state == State.REGULAR && trail.size() > 1000) startTime = (System.currentTimeMillis() - time + startTime) / 2;
+			if (startTime > timeMax && board.state == State.REGULAR && trail.size() > 1000 && levelMax > 3) levelMax--;
+			else if (startTime < timeMin && board.state == State.REGULAR && trail.size() > 1000 && levelMax < 8 && val >= levelMax - 2) levelMax++;
+			
 			if (prevent.size() <= 1) {
 				algoGlobal(board);
 			}
@@ -115,11 +127,7 @@ public class AgentImpl extends Agent {
 					return Direction.RIGHT;
 				}
 			}
-			if (board.state == State.REGULAR && trail.size() > 1000) startTime = (System.currentTimeMillis() - time + startTime) / 2;
-			System.out.println("time=" + startTime + " niveau max=" + levelMax);
-			System.out.println("tourne " + direction);
-			if (startTime > 300 && board.state == State.REGULAR && trail.size() > 1000 && levelMax > 3) levelMax--;
-			else if (startTime < 150 && board.state == State.REGULAR && trail.size() > 1000 && levelMax < 8 && val >= levelMax - 2) levelMax++;
+
 			lastDirection = direction;
 			return direction;
 		}
@@ -136,7 +144,7 @@ public class AgentImpl extends Agent {
 		checkInterruption(); // on doit tester l'interruption au début de chaque méthode
 
 		//----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		if (position.x < 0 || position.x > board.width || position.y < 0 || position.y > board.height) return false;
+		if (position.x < 15 || position.x > board.width-15 || position.y < 15 || position.y > board.height-15) return false;
 		//on créé l'angle pour placer le rectangle et le faire tourner plus tard
 		double angle = Math.atan2(position.y - position2.y, position.x - position2.x);
 		double angle2 = angle + Math.PI / 2;
@@ -243,32 +251,61 @@ public class AgentImpl extends Agent {
 	public void algoGlobal(Board board) {
 		boolean defense=false;
 		
-		//if(prevent.size()!=0)
-		//	defense=true;
-		int val = BonusDirection(defense, board);
+		if(isInCorner(board))
+		{
+			if(lastDirection!=Direction.NONE)
+				direction = lastDirection;
+			else
+				prevent.add(Direction.NONE);
+		} else
+		{
+			
+			if(lastDirection==Direction.NONE)
+			{
+				//TODO et obstacle a moins de 50 alors prevent none
 				
-		HashMap < Direction, Double > valeurDirection = new HashMap < Direction, Double > ();
-		if(prevent.contains(Direction.NONE))
-			valeurDirection.put(Direction.NONE, -100.0);
-		else
-			valeurDirection.put(Direction.NONE, 0.0);	
-		if(prevent.contains(Direction.LEFT))
-			valeurDirection.put(Direction.LEFT, -100.0);
-		else
-			valeurDirection.put(Direction.LEFT, 0.0);
-		if(prevent.contains(Direction.RIGHT))
-			valeurDirection.put(Direction.RIGHT, -100.0);
-		else
-			valeurDirection.put(Direction.RIGHT, 0.0);
+			}
+			//if(prevent.size()!=0)
+			//	defense=true;
+			//int val = BonusDirection(defense, board);
+					
+			HashMap < Direction, Double > valeurDirection = new HashMap < Direction, Double > ();
+			if(prevent.contains(Direction.NONE))
+				valeurDirection.put(Direction.NONE, -100.0);
+			else
+				valeurDirection.put(Direction.NONE, 0.0);	
+			if(prevent.contains(Direction.LEFT))
+				valeurDirection.put(Direction.LEFT, -100.0);
+			else
+				valeurDirection.put(Direction.LEFT, 0.0);
+			if(prevent.contains(Direction.RIGHT))
+				valeurDirection.put(Direction.RIGHT, -100.0);
+			else
+				valeurDirection.put(Direction.RIGHT, 0.0);
+			valeurDirection.put(lastDirection, valeurDirection.get(lastDirection)+0.5);
+			
+			HashMap < Direction, Double > valeurSnake = new HashMap < Direction, Double > ();
+			valeurSnake = getWhereSnakes(board);
+			valeurDirection.put(Direction.NONE, valeurDirection.get(Direction.NONE)+valeurSnake.get(Direction.NONE));
+			valeurDirection.put(Direction.LEFT, valeurDirection.get(Direction.LEFT)+valeurSnake.get(Direction.LEFT));
+			valeurDirection.put(Direction.RIGHT, valeurDirection.get(Direction.RIGHT)+valeurSnake.get(Direction.RIGHT));
+			
+			/*if(val==0 && !prevent.contains(Direction.NONE))
+				direction = Direction.NONE;
+			else if(val==1 && !prevent.contains(Direction.LEFT))
+				direction = Direction.LEFT;
+			else if (val==2 && !prevent.contains(Direction.RIGHT))
+				direction = Direction.RIGHT;*/
+			
+			if (valeurDirection.get(Direction.RIGHT) >= valeurDirection.get(Direction.LEFT) && valeurDirection.get(Direction.RIGHT) >= valeurDirection.get(Direction.NONE)) {
+				direction = Direction.RIGHT;
+			} else if (valeurDirection.get(Direction.LEFT) >= valeurDirection.get(Direction.RIGHT) && valeurDirection.get(Direction.LEFT) >= valeurDirection.get(Direction.NONE)) {
+				direction = Direction.LEFT;
+			} else {
+				direction = Direction.NONE;
+			}
+		}
 		
-		
-		
-		if(val==0 && !prevent.contains(Direction.NONE))
-			direction = Direction.NONE;
-		else if(val==1 && !prevent.contains(Direction.LEFT))
-			direction = Direction.LEFT;
-		else if (val==2 && !prevent.contains(Direction.RIGHT))
-			direction = Direction.RIGHT;
 	}
 	/**
 	 * @param board Le terrain
@@ -332,7 +369,6 @@ public class AgentImpl extends Agent {
 		}
 		if (niveau == 2) {
 			preventChoice(valeurDirection);
-			System.out.println(valeurDirection);
 		}
 		return resultat;
 	}
@@ -355,7 +391,6 @@ public class AgentImpl extends Agent {
 		if (right < none - 0.5 || right < left - 0.5) {
 			prevent.add(Direction.RIGHT);
 		}
-		System.out.println(prevent);
 	}
 
 
@@ -381,7 +416,7 @@ public class AgentImpl extends Agent {
 	 */
 	public Pair < Position, Double > calculatePosition(Direction d, Position p, double angle) {
 		float realTime = startTime;
-		if (realTime < 100) realTime = 100;
+		if (realTime < timeMin) realTime = timeMin;
 		float dist = realTime * agentSnake.movingSpeed;
 		float delta = realTime * agentSnake.turningSpeed * d.value;
 		angle = (float)((angle + delta + 2 * Math.PI) % (2 * Math.PI));
@@ -420,21 +455,32 @@ public class AgentImpl extends Agent {
 	  snakeDirection.put(Direction.NONE, 0.0);
 	  snakeDirection.put(Direction.RIGHT, 0.0);
 	  snakeDirection.put(Direction.LEFT, 0.0);
+	  double dist;
 	  for(Snake snake: board.snakes)
 	  {
-	   if(snake!=agentSnake)
+		  dist=	Math.sqrt(Math.pow(agentSnake.currentX-snake.currentX, 2) + Math.pow(agentSnake.currentY-snake.currentY,2));
+	   if(snake!=agentSnake && dist>50)
 	   {
+		   
 	    double angletmp = (Math.atan2(snake.currentY-agentSnake.currentY, snake.currentX-agentSnake.currentX))%(2*Math.PI);
 	    if(angletmp<0)
 	     angletmp+=2*Math.PI;
 	    if(angletmp>(currentAngle - Math.PI/2) && angletmp<currentAngle-0.25)
-	     snakeDirection.put(Direction.RIGHT, snakeDirection.get(Direction.RIGHT)+1);
+	    {
+	     snakeDirection.put(Direction.LEFT, snakeDirection.get(Direction.LEFT)+1);
+	    }
 	    else if(angletmp>currentAngle+0.25 && angletmp<(currentAngle + Math.PI/2))
-	     snakeDirection.put(Direction.LEFT, snakeDirection.get(Direction.LEFT)+1);
-	    else if((currentAngle + Math.PI/2)>2*Math.PI+0.25 && angletmp<(currentAngle + Math.PI/2-2*Math.PI)-0.25)
-	     snakeDirection.put(Direction.LEFT, snakeDirection.get(Direction.LEFT)+1);
-	    else if((currentAngle - Math.PI/2)<-0.25 && angletmp>(currentAngle - Math.PI/2)+2*Math.PI+0.25)
+	    {
 	     snakeDirection.put(Direction.RIGHT, snakeDirection.get(Direction.RIGHT)+1);
+	    }
+	    else if((currentAngle + Math.PI/2)>2*Math.PI+0.25 && angletmp<(currentAngle + Math.PI/2-2*Math.PI)-0.25)
+	    {
+	     snakeDirection.put(Direction.RIGHT, snakeDirection.get(Direction.RIGHT)+1);
+	    }
+	    else if((currentAngle - Math.PI/2)<-0.25 && angletmp>(currentAngle - Math.PI/2)+2*Math.PI+0.25)
+	    {
+	    	snakeDirection.put(Direction.LEFT, snakeDirection.get(Direction.LEFT)+1);
+	    }
 	    else snakeDirection.put(Direction.NONE, snakeDirection.get(Direction.NONE)+1);
 	   }
 	  }
@@ -577,4 +623,21 @@ public class AgentImpl extends Agent {
 		return 0;
 	}
 
+	//TODO AJOUT SI ON VA VERS UN COIN
+	/**
+	 * Détermine si on considère que la tête du serpent de l'agent
+	 * se trouve dans un coin de l'aire de jeu.
+	 *  
+	 * @return
+	 * 		{@code true} ssi l'agent est dans un coin.
+	 */
+	private boolean isInCorner(Board board)
+	{	checkInterruption();	// on doit tester l'interruption au début de chaque méthode
+		
+		boolean result = agentSnake.currentX<CORNER_THRESHOLD && agentSnake.currentY<CORNER_THRESHOLD
+			|| board.width-agentSnake.currentX<CORNER_THRESHOLD && agentSnake.currentY<CORNER_THRESHOLD
+			|| agentSnake.currentX<CORNER_THRESHOLD && board.height-agentSnake.currentY<CORNER_THRESHOLD
+			|| board.width-agentSnake.currentX<CORNER_THRESHOLD && board.height-agentSnake.currentY<CORNER_THRESHOLD;
+		return result;
+	}
 }

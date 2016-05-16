@@ -119,7 +119,6 @@ public class AgentImpl extends Agent
 		}
 		
 		
-		System.out.println(distance);
 		double none = distance.get(Direction.NONE);
 		double left = distance.get(Direction.LEFT);
 		double right = distance.get(Direction.RIGHT);
@@ -156,20 +155,16 @@ public class AgentImpl extends Agent
 				tmp*=-1;
 			right -= Math.sqrt(tmp)*Math.log(tmp)/2;
 		}
-		System.out.println("none="+none+" right="+right+" left="+left);
 		if((left>=0 && right<left*1.2 && right>left*0.8) || (left<0 && right>left*1.2 && right<left*0.8)  && right>none) //si right et left presque pareil , on prend right
 		{
-			System.out.println(direction);
 			return Direction.RIGHT;
 		}
 		else if((none>=0 && right<none*1.2 && right>none*0.8) || (none<0 && right>none*1.2 && right<none*0.8) && right>left) // si right et none presque pareil , on prend right
 		{
-			System.out.println(direction);
 			return Direction.RIGHT;
 		}
 		else if((none>=0 && left<none*1.2 && left>none*0.8) || (none<0 && left>none*1.2 && left<none*0.8 ) && left>right) // si left et none presque pareil, on prend left
 		{
-			System.out.println(direction);
 			return Direction.LEFT;
 		}
 		
@@ -179,7 +174,6 @@ public class AgentImpl extends Agent
 			direction=Direction.LEFT;
 		else
 			direction=Direction.RIGHT;
-		System.out.println(direction);
 		
 		return direction;
 	}
