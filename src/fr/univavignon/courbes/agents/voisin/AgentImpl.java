@@ -414,7 +414,33 @@ public class AgentImpl extends Agent {
 		}
 	}
 
-
+	public HashMap<Direction, Double> getWhereSnakes(Board board)
+	 {
+	  HashMap<Direction, Double > snakeDirection = new HashMap<Direction, Double >();
+	  snakeDirection.put(Direction.NONE, 0.0);
+	  snakeDirection.put(Direction.RIGHT, 0.0);
+	  snakeDirection.put(Direction.LEFT, 0.0);
+	  for(Snake snake: board.snakes)
+	  {
+	   if(snake!=agentSnake)
+	   {
+	    double angletmp = (Math.atan2(snake.currentY-agentSnake.currentY, snake.currentX-agentSnake.currentX))%(2*Math.PI);
+	    if(angletmp<0)
+	     angletmp+=2*Math.PI;
+	    if(angletmp>(currentAngle - Math.PI/2) && angletmp<currentAngle-0.25)
+	     snakeDirection.put(Direction.RIGHT, snakeDirection.get(Direction.RIGHT)+1);
+	    else if(angletmp>currentAngle+0.25 && angletmp<(currentAngle + Math.PI/2))
+	     snakeDirection.put(Direction.LEFT, snakeDirection.get(Direction.LEFT)+1);
+	    else if((currentAngle + Math.PI/2)>2*Math.PI+0.25 && angletmp<(currentAngle + Math.PI/2-2*Math.PI)-0.25)
+	     snakeDirection.put(Direction.LEFT, snakeDirection.get(Direction.LEFT)+1);
+	    else if((currentAngle - Math.PI/2)<-0.25 && angletmp>(currentAngle - Math.PI/2)+2*Math.PI+0.25)
+	     snakeDirection.put(Direction.RIGHT, snakeDirection.get(Direction.RIGHT)+1);
+	    else snakeDirection.put(Direction.NONE, snakeDirection.get(Direction.NONE)+1);
+	   }
+	  }
+	  return snakeDirection;
+	 }
+	
 	/**
 	 * Choisi un bonus.
 	 * @param var contient un int qui influ sur la note suivant la situation du snake.
