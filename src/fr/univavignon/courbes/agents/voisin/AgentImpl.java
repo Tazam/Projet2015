@@ -278,6 +278,7 @@ public class AgentImpl extends Agent {
 				}
 
 			}
+			//TODO faire pareil a droite et a gauche
 			//if(prevent.size()!=0)
 			//	defense=true;
 			//int val = BonusDirection(defense, board);
@@ -485,6 +486,10 @@ public class AgentImpl extends Agent {
 					} else {
 						snakeDirection.put(Direction.NONE, snakeDirection.get(Direction.NONE) + 1);
 					}
+				} else
+				{
+					snakeDirection.put(Direction.LEFT, snakeDirection.get(Direction.LEFT) + 0.5);
+					snakeDirection.put(Direction.RIGHT, snakeDirection.get(Direction.RIGHT) + 0.5);
 				}
 			}
 		}
