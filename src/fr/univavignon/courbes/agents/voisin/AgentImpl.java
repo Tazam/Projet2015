@@ -50,11 +50,11 @@ public class AgentImpl extends Agent {
 	 */
 	private long startTime = 300;
 	/**
-	 * temps minimum pour une  decision
+	 * temps minimum pour une  decision locale
 	 */
 	private int timeMin = 200;
 	/**
-	 * temps maximum pour une  decision
+	 * temps maximum pour une  decision locale
 	 */
 	private int timeMax = 400;
 	/**
@@ -133,7 +133,6 @@ public class AgentImpl extends Agent {
 				}
 			}
 			lastDirection = direction;
-			System.out.println("direction="+direction);
 			return direction;
 		}
 	}
@@ -279,7 +278,6 @@ public class AgentImpl extends Agent {
 			else prevent.add(Direction.NONE);
 		} else {
 			//si on va vers un mur non  detecté par l'algo local
-				//TODO verifier formule ...
 				boolean none_prevented=false,left_prevented=false,right_prevented=false; 
 				for (Position obstacle: trail) {
 					double angle = modulo(Math.atan2(obstacle.y - agentSnake.currentY, obstacle.x - agentSnake.currentX),2*Math.PI);
@@ -305,7 +303,6 @@ public class AgentImpl extends Agent {
 					}
 
 			}
-			//TODO faire pareil a droite et a gauche
 
 			//if(prevent.size()!=0)
 			//	defense=true;
@@ -321,16 +318,21 @@ public class AgentImpl extends Agent {
 
 			HashMap < Direction, Double > valeurSnake = new HashMap < Direction, Double > ();
 			valeurSnake = getWhereSnakes(board);
-			valeurDirection.put(Direction.NONE, valeurDirection.get(Direction.NONE) + valeurSnake.get(Direction.NONE));
-			valeurDirection.put(Direction.LEFT, valeurDirection.get(Direction.LEFT) + valeurSnake.get(Direction.LEFT));
-			valeurDirection.put(Direction.RIGHT, valeurDirection.get(Direction.RIGHT) + valeurSnake.get(Direction.RIGHT));
-
-			/*if(val==0 && !prevent.contains(Direction.NONE))
-				direction = Direction.NONE;
-			else if(val==1 && !prevent.contains(Direction.LEFT))
-				direction = Direction.LEFT;
-			else if (val==2 && !prevent.contains(Direction.RIGHT))
-				direction = Direction.RIGHT;*/
+			if(board.state==State.ENTRANCE)
+			{
+				valeurSnake.put(Direction.NONE,valeurSnake.get(Direction.NONE)*-1);
+				valeurSnake.put(Direction.RIGHT,valeurSnake.get(Direction.RIGHT)*-1);
+				valeurSnake.put(Direction.LEFT,valeurSnake.get(Direction.LEFT)*-1);
+			}
+			HashMap < Direction, Double > valeurObstacle = new HashMap < Direction, Double > ();
+			valeurObstacle = getWhereObstacles(trail);
+			HashMap < Direction, Double > valeurItem = new HashMap < Direction, Double > ();
+			valeurItem = getWhereBonus(board);
+			System.out.println(valeurItem);
+			valeurDirection.put(Direction.NONE, valeurDirection.get(Direction.NONE) + valeurSnake.get(Direction.NONE) + valeurObstacle.get(Direction.NONE) + valeurItem.get(Direction.NONE));
+			valeurDirection.put(Direction.LEFT, valeurDirection.get(Direction.LEFT) + valeurSnake.get(Direction.LEFT)+ valeurObstacle.get(Direction.LEFT) + valeurItem.get(Direction.LEFT));
+			valeurDirection.put(Direction.RIGHT, valeurDirection.get(Direction.RIGHT) + valeurSnake.get(Direction.RIGHT)+ valeurObstacle.get(Direction.RIGHT) + valeurItem.get(Direction.RIGHT));
+			
 
 			if (valeurDirection.get(Direction.RIGHT) >= valeurDirection.get(Direction.LEFT) && valeurDirection.get(Direction.RIGHT) >= valeurDirection.get(Direction.NONE)) {
 				direction = Direction.RIGHT;
@@ -499,7 +501,7 @@ public class AgentImpl extends Agent {
 		double dist;
 		for (Snake snake: board.snakes) {
 			dist = Math.sqrt(Math.pow(agentSnake.currentX - snake.currentX, 2) + Math.pow(agentSnake.currentY - snake.currentY, 2));
-			if (snake != agentSnake && dist > 100 && snake.eliminatedBy==null) {
+			if (snake != agentSnake && dist > 150 && snake.eliminatedBy==null) {
 				double angletmp = (Math.atan2(snake.currentY - agentSnake.currentY, snake.currentX - agentSnake.currentX)) % (2 * Math.PI);
 				if (angletmp < 0) angletmp += 2 * Math.PI;
 				if ((currentAngle >= angletmp - Math.PI / 2 && currentAngle <= angletmp + Math.PI / 2) || (currentAngle >= angletmp - 2 * Math.PI - Math.PI / 2 && currentAngle <= angletmp - 2 * Math.PI + Math.PI / 2) || (currentAngle >= angletmp + 2 * Math.PI - Math.PI / 2 && currentAngle <= angletmp + 2 * Math.PI + Math.PI / 2)) {
@@ -528,7 +530,7 @@ public class AgentImpl extends Agent {
 	 * @param board le plateau de jeu
 	 * @return une HashMap avec les 3 direction possible en cle et les note de chaque directions en valeur.
 	 */
-	private HashMap<Direction , Double> processBonus(Board board) {
+	private HashMap<Direction , Double> getWhereBonus(Board board) {
 		checkInterruption(); // on doit tester l'interruption au début de chaque méthode
 		// on compte le nombre de bonus
 		int k = board.items.size();
@@ -555,22 +557,22 @@ public class AgentImpl extends Agent {
 			// on attribue une note selon le type de bonus
 			switch (i.type) {
 			case OTHERS_FAST:
-				note = 0;
-				break;
-			case OTHERS_REVERSE:
-				note = 1;
-				break;
-			case OTHERS_THICK:
 				note = 2;
 				break;
+			case OTHERS_REVERSE:
+				note = 2;
+				break;
+			case OTHERS_THICK:
+				note = 4;
+				break;
 			case OTHERS_SLOW:
-				note = 0;
+				note = 1;
 				break;
 			case USER_FAST:
-				note = 0;
+				note = -1;
 				break;
 			case USER_FLY:
-				note = 5;
+				note = 6;
 				break;
 			case USER_SLOW:
 				note = 0;
@@ -624,6 +626,7 @@ public class AgentImpl extends Agent {
 		obstacleDirection.put(Direction.RIGHT, 0.0);
 		obstacleDirection.put(Direction.LEFT, 0.0);
 		double dist;
+		int nbObstacles = trail.size();
 		for (Position obstacle:trail) {
 			dist = Math.sqrt(Math.pow(agentSnake.currentX - obstacle.x, 2) + Math.pow(agentSnake.currentY - obstacle.y, 2));
 			if (dist > 100) {
@@ -648,11 +651,14 @@ public class AgentImpl extends Agent {
 				}
 			}
 		}
+		
+		obstacleDirection.put(Direction.NONE, obstacleDirection.get(Direction.NONE)/nbObstacles * 5);
+		obstacleDirection.put(Direction.RIGHT, obstacleDirection.get(Direction.RIGHT)/nbObstacles * 5);
+		obstacleDirection.put(Direction.LEFT, obstacleDirection.get(Direction.LEFT)/nbObstacles * 5);
 		return obstacleDirection;
 	}
 	
 
-	//TODO AJOUT SI ON VA VERS UN COIN
 	/**
 	 * Détermine si on considère que la tête du serpent de l'agent
 	 * se trouve dans un coin de l'aire de jeu.
