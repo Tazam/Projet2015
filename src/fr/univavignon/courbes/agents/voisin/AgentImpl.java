@@ -44,8 +44,7 @@ import fr.univavignon.courbes.common.Snake;
 public class AgentImpl extends Agent {
 	/** Direction courante du serpent de l'agent */
 	private double currentAngle;@SuppressWarnings("javadoc")
-	private int repeat=2;
-	private Position startAt;
+	private int repeat=1;
 	/**
 	 * temps nécessaire pour choisir une direction
 	 */
@@ -100,9 +99,6 @@ public class AgentImpl extends Agent {
 	public Direction processDirection() {
 
 		checkInterruption();
-		
-		direction = Direction.NONE;
-
 		Board board = getBoard();
 		if (board == null) return Direction.NONE;
 		else {
@@ -116,39 +112,28 @@ public class AgentImpl extends Agent {
 			updateAngles();
 			Set < Position > trail = new TreeSet < Position > (border);
 			Position posSnake = new Position(agentSnake.currentX, agentSnake.currentY);
-			
-			if(startAt!=null)
-			{
-				float elapsed = (System.currentTimeMillis() - time + startTime) / 2;
-				if( dansrayon || elapsed>timeMax)
-				{
-					lastDirection = direction;
-					startAt=null;
-					// si l'agent est sous le malus inverse on inverse ses choix de direction.
-					if (agentSnake.inversion) {
-						if (direction == Direction.RIGHT) {
-							return Direction.LEFT;
-						}
+			getObstacle(board, trail);
 
-						if (direction == Direction.LEFT) {
-							return Direction.RIGHT;
-						}
-					}
-					return direction;
+			double val = algoLocal(board, trail, posSnake, 0, currentAngle, posSnake, 0, posSnake);
+			if (board.state == State.REGULAR && trail.size() > 1000) startTime = (System.currentTimeMillis() - time + startTime) / 2;
+			if (startTime > timeMax && board.state == State.REGULAR && trail.size() > 1000 && levelMax > repeat) levelMax--;
+			else if (startTime < timeMin && board.state == State.REGULAR && trail.size() > 1000 && levelMax < 10 && val >= levelMax - 2) levelMax++;
+
+			if (prevent.size() <= 1) {
+				algoGlobal(board, trail);
+			}
+			// si l'agent est sous le malus inverse on inverse ses choix de direction.
+			if (agentSnake.inversion) {
+				if (direction == Direction.RIGHT) {
+					return Direction.LEFT;
 				}
-			}else{
-				getObstacle(board, trail);
-	
-				double val = algoLocal(board, trail, posSnake, 0, currentAngle, posSnake, 0, posSnake);
-				if (board.state == State.REGULAR && trail.size() > 1000) startTime = (System.currentTimeMillis() - time + startTime) / 2;
-				if (startTime > timeMax && board.state == State.REGULAR && trail.size() > 1000 && levelMax > repeat) levelMax--;
-				else if (startTime < timeMin && board.state == State.REGULAR && trail.size() > 1000 && levelMax < 10 && val >= levelMax - 2) levelMax++;
-	
-				if (prevent.size() <= 1) {
-					algoGlobal(board, trail);
+
+				if (direction == Direction.LEFT) {
+					return Direction.RIGHT;
 				}
-			}	
-			return lastDirection;
+			}
+			lastDirection = direction;
+			return direction;
 		}
 	}
 
@@ -284,8 +269,9 @@ public class AgentImpl extends Agent {
 				//TODO verifier formule ...
 				for (Position obstacle: trail) {
 					double angle = Math.atan2(obstacle.y - agentSnake.currentY, obstacle.x - agentSnake.currentX);
-					if (Math.sqrt(Math.pow(agentSnake.currentX - obstacle.x, 2) + Math.pow(agentSnake.currentY - obstacle.y, 2)) < 50 && (angle <= 0.5 || Math.PI >= Math.PI - 0.5)) {
+					if (Math.sqrt(Math.pow(agentSnake.currentX - obstacle.x, 2) + Math.pow(agentSnake.currentY - obstacle.y, 2)) < 50 && (angle <= 0.35 || Math.PI >= Math.PI - 0.35)) {
 						prevent.add(Direction.NONE);
+						System.out.println("yolo on tourne oklm om é trau feaur");
 						break;
 					}
 				}
@@ -374,8 +360,6 @@ public class AgentImpl extends Agent {
 			if (lastDirection == Direction.NONE) valeurDirection.put(Direction.NONE, valeurDirection.get(Direction.NONE) + 2 / levelMax);
 		}
 		if (niveau <= repeat) {
-			if(niveau==repeat)
-				startAt = cpos.getFirst();
 			return valeurDirection.get(lastDirection);
 		}
 		//prio droite
