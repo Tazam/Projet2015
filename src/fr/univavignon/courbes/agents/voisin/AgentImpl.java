@@ -504,138 +504,132 @@ public class AgentImpl extends Agent {
 	}
 
 	/**
-	 * Choisi un bonus.
-	 * @param var contient un int qui influ sur la note suivant la situation du snake.
-	 * @return un tableau d'int qui va contenir les coordonées des bonus x en [0][] r=et y en [1][]; si le nombre de bonus est de zero, resutl[0][0]==-1
-	 * sinon resutl[0][0] contien la taille;
+	 * @param board le plateau de jeu
+	 * @return une HashMap avec les 3 direction possible en cle et les note de chaque directions en valeur.
 	 */
-
-	/**
-	 * @param board plateau de jeu
-	 * @return un tableau d'int qui va contenir les coordonées des bonus x en [0][] r=et y en [1][]; si le nombre de bonus est de zero, resutl[0][0]==-1
-	 * sinon resutl[0][0] contien la taille;
-	 */
-	private int[][] processBonus(Board board) {
+	private HashMap<Direction , Double> processBonus(Board board) {
 		checkInterruption(); // on doit tester l'interruption au début de chaque méthode
-		int k = 0;
 		// on compte le nombre de bonus
-		k = board.items.size();
-		// va contenir les coordonées des bonus x en [0][] r=et y en [1][]; une note sera attribué en [2][]
-		int result[][] = new int[3][k + 1];
-		// si il n'y à pas de bonus
+		int k = board.items.size();
+		
+		double note = 0.0;
+		double note_tmp = 0.0;
+		// création et initialisation à 0 de la map à retourner
+		HashMap<Direction , Double> result = new HashMap < Direction, Double > ();
+		result.put(Direction.LEFT, note);
+		result.put(Direction.NONE, note);
+		result.put(Direction.RIGHT, note);
+		
+		
+		// si il n'y à pas de bonus les 3 chemins se valent donc on retourne la map tel quelle.
 		if (k == 0) {
-			result[0][0] = -1;
 			return result;
-		} else {
-			result[0][0] = k + 1;
 		}
-		k = 1;
+		
+		// sinon on calcule pour chaques item son influence sur la note des directions.
 		for (ItemInstance i: board.items) {
 			checkInterruption(); // une boucle, donc un autre test d'interruption
-			result[0][k] = i.x;
-			result[1][k] = i.y;
 
+			
 			// on attribue une note selon le type de bonus
 			switch (i.type) {
 			case OTHERS_FAST:
-				result[2][k] = -1;
+				note = 0;
 				break;
 			case OTHERS_REVERSE:
-				result[2][k] = -5;
+				note = 1;
 				break;
 			case OTHERS_THICK:
-				result[2][k] = -2;
+				note = 2;
 				break;
 			case OTHERS_SLOW:
-				result[2][k] = -4;
+				note = 0;
 				break;
 			case USER_FAST:
-				result[2][k] = -3;
+				note = 0;
 				break;
 			case USER_FLY:
-				result[2][k] = 5;
+				note = 5;
 				break;
 			case USER_SLOW:
-				result[2][k] = 1;
+				note = 0;
 				break;
 			}
-			// la note est modifier selon la distance entre les differents serpent et le bonus.
+			// la note est modifié selon la distance entre les differents serpent et le bonus.
+			
+			// on calcul l'angle entre la tete du de l'agent et le bonus
+			double angle = Math.atan2(i.y - agentSnake.currentY, i.x - agentSnake.currentX);
+			if (angle < 0) {
+				angle = angle + 2 * Math.PI;
+			}
 
-			k++;
+			if (angle == 0) // le bonus est devant
+			{
+				// on met à jour la note.
+				note_tmp=result.get(Direction.NONE)+note;
+				result.put(Direction.NONE, note_tmp);
+			}
+
+			if (angle == Math.PI) // si le bonus est derrière , la note influe sur les cotes gauche et droit.
+			{
+				note_tmp=result.get(Direction.LEFT)+(note/2);
+				result.put(Direction.LEFT, note_tmp);
+				note_tmp=result.get(Direction.RIGHT)+(note/2);
+				result.put(Direction.RIGHT, note_tmp);
+			}
+
+			if (angle < Math.PI) // le bonus est à gauche, on met à jour la note de la direction gauche.
+			{
+				note_tmp=result.get(Direction.LEFT)+note;
+				result.put(Direction.LEFT, note_tmp);
+				
+			} else if (angle < 2 * Math.PI) // le bonus est à droite, on met à jour la note de la direction droite.
+			{
+				note_tmp=result.get(Direction.RIGHT)+note;
+				result.put(Direction.RIGHT, note_tmp);
+			}
+
 		}
-
 		return result;
-
 	}
 
-	/*
-/**
-* 
-* 
-*/
 	/**
-	 * @param var true si on veut un bonus defensif false pour un offensif
-	 * @param board plateau de jeu
-	 * @return 1 si le meilleur bonus est à gauche, 2 s'il est à droite, 0 si la direction est bonne, -1 si il n'y a pas de bon choix.
+	 * @param trail : les trainées des snake du board
+	 * @return une HashMap avec en clé les direction et en valeur le nombre d'obstacle vers cette direction.
 	 */
-	private int BonusDirection(boolean	var, Board board) {
-		int bonus[][] = processBonus(board);
-
-		if (bonus[0][0] == -1) {
-			return -1;
-		}
-		int k = 1;
-		// si on veut un bonus defensif
-		if (var) {
-			int max = bonus[2][1];
-
-			// on choisi le meilleur bonus;
-			for (int i = 1; i < bonus[0][0] - 1; i++) {
-				checkInterruption(); // une boucle, donc un autre test d'interruption
-				if (max < bonus[2][i]) {
-					max = bonus[2][i];
-					k = i;
+	public HashMap < Direction, Double > getWhereObstacles(Set<Position> trail) {
+		HashMap < Direction, Double > obstacleDirection = new HashMap < Direction, Double > ();
+		obstacleDirection.put(Direction.NONE, 0.0);
+		obstacleDirection.put(Direction.RIGHT, 0.0);
+		obstacleDirection.put(Direction.LEFT, 0.0);
+		double dist;
+		for (Position obstacle:trail) {
+			dist = Math.sqrt(Math.pow(agentSnake.currentX - obstacle.x, 2) + Math.pow(agentSnake.currentY - obstacle.y, 2));
+			if (dist > 100) {
+				double angletmp = (Math.atan2(obstacle.y - agentSnake.currentY, obstacle.x- agentSnake.currentX)) % (2 * Math.PI);
+				if (angletmp < 0) angletmp += 2 * Math.PI;
+				if ((currentAngle >= angletmp - Math.PI / 2 && currentAngle <= angletmp + Math.PI / 2) || (currentAngle >= angletmp - 2 * Math.PI - Math.PI / 2 && currentAngle <= angletmp - 2 * Math.PI + Math.PI / 2) || (currentAngle >= angletmp + 2 * Math.PI - Math.PI / 2 && currentAngle <= angletmp + 2 * Math.PI + Math.PI / 2)) {
+					if (angletmp > (currentAngle - Math.PI / 2) && angletmp < currentAngle - 0.25) {
+						obstacleDirection.put(Direction.LEFT, obstacleDirection.get(Direction.LEFT) + 1);
+					} else if (angletmp > currentAngle + 0.25 && angletmp < (currentAngle + Math.PI / 2)) {
+						obstacleDirection.put(Direction.RIGHT, obstacleDirection.get(Direction.RIGHT) + 1);
+					} else if ((currentAngle + Math.PI / 2) > 2 * Math.PI + 0.25 && angletmp < (currentAngle + Math.PI / 2 - 2 * Math.PI) - 0.25) {
+						obstacleDirection.put(Direction.RIGHT, obstacleDirection.get(Direction.RIGHT) + 1);
+					} else if ((currentAngle - Math.PI / 2) < -0.25 && angletmp > (currentAngle - Math.PI / 2) + 2 * Math.PI + 0.25) {
+						obstacleDirection.put(Direction.LEFT, obstacleDirection.get(Direction.LEFT) + 1);
+					} else {
+						obstacleDirection.put(Direction.NONE, obstacleDirection.get(Direction.NONE) + 1);
+					}
+				} else
+				{
+					obstacleDirection.put(Direction.LEFT, obstacleDirection.get(Direction.LEFT) + 0.5);
+					obstacleDirection.put(Direction.RIGHT, obstacleDirection.get(Direction.RIGHT) + 0.5);
 				}
 			}
-		} else {
-			int min = bonus[2][1];
-
-			// on choisi le meilleur bonus;
-			for (int i = 1; i < bonus[0][0] - 1; i++) {
-				checkInterruption(); // une boucle, donc un autre test d'interruption
-				if (min > bonus[2][i]) {
-					min = bonus[2][i];
-					k = i;
-				}
-			}
 		}
-		Position position = new Position(bonus[0][k], bonus[1][k]);
-		// on calcul l'angle entre la tete du de l'agent et le bonus
-		double angle = Math.atan2(position.y - agentSnake.currentY, position.x - agentSnake.currentX);
-		if (angle < 0) {
-			angle = angle + 2 * Math.PI;
-		}
-
-		if (angle == 0) // le bonus est devant
-		{
-			return 0;
-		}
-
-		if (angle == Math.PI) // si le bonus est derrière (à amélioré)
-		{
-			return 1;
-		}
-
-		if (angle < Math.PI) // le bonus est à gauche
-		{
-			return 1;
-		} else if (angle < 2 * Math.PI) // le bonus est à droite.
-		{
-			return 2;
-		}
-
-		return 0;
+		return obstacleDirection;
 	}
+	
 
 	//TODO AJOUT SI ON VA VERS UN COIN
 	/**
