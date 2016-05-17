@@ -648,7 +648,66 @@ public class AgentImpl extends Agent {
 	 */
 	private boolean isInCorner(Board board) {
 		checkInterruption(); // on doit tester l'interruption au début de chaque méthode
-		boolean result = agentSnake.currentX < CORNER_THRESHOLD && agentSnake.currentY < CORNER_THRESHOLD || board.width - agentSnake.currentX < CORNER_THRESHOLD && agentSnake.currentY < CORNER_THRESHOLD || agentSnake.currentX < CORNER_THRESHOLD && board.height - agentSnake.currentY < CORNER_THRESHOLD || board.width - agentSnake.currentX < CORNER_THRESHOLD && board.height - agentSnake.currentY < CORNER_THRESHOLD;
+		double droite = currentAngle - Math.atan(120);
+		double gauche = currentAngle + Math.atan(120);
+		if(agentSnake.currentX < CORNER_THRESHOLD && agentSnake.currentY < CORNER_THRESHOLD)
+		{
+			double angle = Math.atan2(0-agentSnake.currentY, 0-agentSnake.currentX);
+			if(estVisible(angle,droite,gauche))
+			{
+				return true;
+			}
+		}
+		else if(board.width - agentSnake.currentX < CORNER_THRESHOLD && agentSnake.currentY < CORNER_THRESHOLD)
+		{
+			double angle = Math.atan2(board.width-agentSnake.currentY, 0-agentSnake.currentX);
+			if(estVisible(angle,droite,gauche))
+			{
+				return true;
+			}
+		}
+		else if(agentSnake.currentX < CORNER_THRESHOLD && board.height - agentSnake.currentY < CORNER_THRESHOLD)
+		{
+			double angle = Math.atan2(0-agentSnake.currentY, board.height-agentSnake.currentX);
+			if(estVisible(angle,droite,gauche))
+			{
+				return true;
+			}
+		}
+		else if(board.width - agentSnake.currentX < CORNER_THRESHOLD && board.height - agentSnake.currentY < CORNER_THRESHOLD)
+		{
+			double angle = Math.atan2(board.width-agentSnake.currentY, board.height-agentSnake.currentX);
+			if(estVisible(angle,droite,gauche))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * @param angle -> angle directionnel du snake
+	 * @param droite -> vue droite du snake
+	 * @param gauche -> vue gauche du snake
+	 * @return -> return vrai si obstacle dans champs de vision
+	 */
+	private boolean estVisible(double angle, double droite, double gauche)
+	{	checkInterruption();	// on doit tester l'interruption au début de chaque méthode
+		boolean result = false;
+		
+		if(angle>=droite && angle<=gauche)
+			result = true;
+
+		// premier cas limite : si la borne supérieure dépasse 2PI
+		// on teste si l'angle est inférieur à upperBound - 2pi.
+		else if(gauche>2*Math.PI && angle<=gauche-2*Math.PI)
+			result = true;
+			
+		// second cas limite : si la borne inférieure est négative 
+		// on teste si l'angle est supérieur à lowerBound + 2PI
+		else if(droite<0 && angle>=droite+2*Math.PI)
+			result = true;
+			
 		return result;
 	}
 }
