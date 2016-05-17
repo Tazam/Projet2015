@@ -133,6 +133,7 @@ public class AgentImpl extends Agent {
 				}
 			}
 			lastDirection = direction;
+			System.out.println("direction="+direction);
 			return direction;
 		}
 	}
@@ -248,10 +249,24 @@ public class AgentImpl extends Agent {
 	private void updateAngles() {
 		checkInterruption();
 		// angle de déplacement
-		currentAngle = agentSnake.currentAngle % (2 * Math.PI);
-		if (currentAngle < 0) currentAngle += 2 * Math.PI;
+		currentAngle = modulo(agentSnake.currentAngle, 2 * Math.PI);
 	}
-
+	
+	/**
+	 * @param a le nombre a moduler
+	 * @param modulo la valeur du modulo
+	 * @return le modulo de la valeur 'a'
+	 */
+	private double modulo(double a , double modulo){
+		checkInterruption();
+		// angle de déplacement
+		double tmp;
+		tmp = a % (modulo);
+		if (tmp < 0) tmp += 2 * Math.PI;
+		return tmp;
+		
+		
+	}
 	/**
 	 * @param board terrain de jeu
 	 * @param trail liste des obstacles
@@ -263,29 +278,35 @@ public class AgentImpl extends Agent {
 			if (lastDirection != Direction.NONE) direction = lastDirection;
 			else prevent.add(Direction.NONE);
 		} else {
-
 			//si on va vers un mur non  detecté par l'algo local
-			if (lastDirection == Direction.NONE) {
 				//TODO verifier formule ...
+				boolean none_prevented=false,left_prevented=false,right_prevented=false; 
 				for (Position obstacle: trail) {
-					double angle = Math.atan2(obstacle.y - agentSnake.currentY, obstacle.x - agentSnake.currentX);
-					if (Math.sqrt(Math.pow(agentSnake.currentX - obstacle.x, 2) + Math.pow(agentSnake.currentY - obstacle.y, 2)) < 50 && (angle <= 0.35 || Math.PI >= Math.PI - 0.35)) {
+					double angle = modulo(Math.atan2(obstacle.y - agentSnake.currentY, obstacle.x - agentSnake.currentX),2*Math.PI);
+					double distance = Math.sqrt(Math.pow(agentSnake.currentX - obstacle.x, 2) + Math.pow(agentSnake.currentY - obstacle.y, 2));
+					double max = modulo(currentAngle + Math.PI/2, 2*Math.PI), min = modulo(currentAngle - Math.PI/2, 2*Math.PI);
+					double max2 = modulo(currentAngle + 0.175, 2*Math.PI), min2 = modulo(currentAngle - 0.175, 2*Math.PI);
+					if(distance<35)
+						//System.out.println("angle="+angle+" Angle max="+max + " Angle min="+min + " Angle max2="+max2+" Angle min2="+min2);
+					if (!none_prevented && distance>agentSnake.headRadius && distance< 30 && (angle <= modulo(0.175+currentAngle, 2*Math.PI) && angle >= modulo(currentAngle- 0.175,2*Math.PI))) {
 						prevent.add(Direction.NONE);
-						System.out.println("yolo on tourne oklm om é trau feaur");
-						break;
+						System.out.println("prevent none");
+						none_prevented=true;
 					}
-				}
+					else if (!right_prevented && distance>agentSnake.headRadius && distance < 30 && (angle <=modulo(Math.PI/2 + currentAngle, 2*Math.PI) && angle>modulo(0.175 + currentAngle, 2*Math.PI))) {
+						System.out.println("prevent RIGHT");
+						prevent.add(Direction.RIGHT);
+						right_prevented=true;
+					}
+					else if (!left_prevented && distance>agentSnake.headRadius && distance < 30 && (angle >= modulo(currentAngle - Math.PI/2, 2*Math.PI) && angle<modulo(currentAngle - 0.175, 2*Math.PI))) {
+						System.out.println("prevent LEFT");
+						prevent.add(Direction.LEFT);
+						left_prevented=true;
+					}
 
 			}
 			//TODO faire pareil a droite et a gauche
-			if (Math.sqrt(Math.pow(agentSnake.currentX - obstacle.x, 2) + Math.pow(agentSnake.currentY - obstacle.y, 2)) < 50 && (angle <= Math.PI/4-0.35 || Math.PI >= Math.PI - 0.35)) {
-				prevent.add(Direction.LEFT);
-				break;
-			}
-			if (Math.sqrt(Math.pow(agentSnake.currentX - obstacle.x, 2) + Math.pow(agentSnake.currentY - obstacle.y, 2)) < 50 && (angle <= 3*Math.PI/4-0.35 || Math.PI >= Math.PI - 0.35)) {
-				prevent.add(Direction.RIGHT);
-				break;
-			}
+
 			//if(prevent.size()!=0)
 			//	defense=true;
 			//int val = BonusDirection(defense, board);
@@ -478,7 +499,7 @@ public class AgentImpl extends Agent {
 		double dist;
 		for (Snake snake: board.snakes) {
 			dist = Math.sqrt(Math.pow(agentSnake.currentX - snake.currentX, 2) + Math.pow(agentSnake.currentY - snake.currentY, 2));
-			if (snake != agentSnake && dist > 100) {
+			if (snake != agentSnake && dist > 100 && snake.eliminatedBy==null) {
 				double angletmp = (Math.atan2(snake.currentY - agentSnake.currentY, snake.currentX - agentSnake.currentX)) % (2 * Math.PI);
 				if (angletmp < 0) angletmp += 2 * Math.PI;
 				if ((currentAngle >= angletmp - Math.PI / 2 && currentAngle <= angletmp + Math.PI / 2) || (currentAngle >= angletmp - 2 * Math.PI - Math.PI / 2 && currentAngle <= angletmp - 2 * Math.PI + Math.PI / 2) || (currentAngle >= angletmp + 2 * Math.PI - Math.PI / 2 && currentAngle <= angletmp + 2 * Math.PI + Math.PI / 2)) {
@@ -642,7 +663,66 @@ public class AgentImpl extends Agent {
 	 */
 	private boolean isInCorner(Board board) {
 		checkInterruption(); // on doit tester l'interruption au début de chaque méthode
-		boolean result = agentSnake.currentX < CORNER_THRESHOLD && agentSnake.currentY < CORNER_THRESHOLD || board.width - agentSnake.currentX < CORNER_THRESHOLD && agentSnake.currentY < CORNER_THRESHOLD || agentSnake.currentX < CORNER_THRESHOLD && board.height - agentSnake.currentY < CORNER_THRESHOLD || board.width - agentSnake.currentX < CORNER_THRESHOLD && board.height - agentSnake.currentY < CORNER_THRESHOLD;
+		double droite = currentAngle - Math.atan(120);
+		double gauche = currentAngle + Math.atan(120);
+		if(agentSnake.currentX < CORNER_THRESHOLD && agentSnake.currentY < CORNER_THRESHOLD)
+		{
+			double angle = Math.atan2(0-agentSnake.currentY, 0-agentSnake.currentX);
+			if(estVisible(angle,droite,gauche))
+			{
+				return true;
+			}
+		}
+		else if(board.width - agentSnake.currentX < CORNER_THRESHOLD && agentSnake.currentY < CORNER_THRESHOLD)
+		{
+			double angle = Math.atan2(board.width-agentSnake.currentY, 0-agentSnake.currentX);
+			if(estVisible(angle,droite,gauche))
+			{
+				return true;
+			}
+		}
+		else if(agentSnake.currentX < CORNER_THRESHOLD && board.height - agentSnake.currentY < CORNER_THRESHOLD)
+		{
+			double angle = Math.atan2(0-agentSnake.currentY, board.height-agentSnake.currentX);
+			if(estVisible(angle,droite,gauche))
+			{
+				return true;
+			}
+		}
+		else if(board.width - agentSnake.currentX < CORNER_THRESHOLD && board.height - agentSnake.currentY < CORNER_THRESHOLD)
+		{
+			double angle = Math.atan2(board.width-agentSnake.currentY, board.height-agentSnake.currentX);
+			if(estVisible(angle,droite,gauche))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * @param angle -> angle directionnel du snake
+	 * @param droite -> vue droite du snake
+	 * @param gauche -> vue gauche du snake
+	 * @return -> return vrai si obstacle dans champs de vision
+	 */
+	private boolean estVisible(double angle, double droite, double gauche)
+	{	checkInterruption();	// on doit tester l'interruption au début de chaque méthode
+		boolean result = false;
+		
+		if(angle>=droite && angle<=gauche)
+			result = true;
+
+		// premier cas limite : si la borne supérieure dépasse 2PI
+		// on teste si l'angle est inférieur à upperBound - 2pi.
+		else if(gauche>2*Math.PI && angle<=gauche-2*Math.PI)
+			result = true;
+			
+		// second cas limite : si la borne inférieure est négative 
+		// on teste si l'angle est supérieur à lowerBound + 2PI
+		else if(droite<0 && angle>=droite+2*Math.PI)
+			result = true;
+			
 		return result;
 	}
 }
