@@ -44,18 +44,20 @@ import fr.univavignon.courbes.common.Snake;
 public class AgentImpl extends Agent {
 	/** Direction courante du serpent de l'agent */
 	private double currentAngle;@SuppressWarnings("javadoc")
+	private int repeat=2;
+	private Position startAt;
 	/**
 	 * temps nécessaire pour choisir une direction
 	 */
-	private long startTime = 200;
+	private long startTime = 300;
 	/**
 	 * temps minimum pour une  decision
 	 */
-	private int timeMin = 150;
+	private int timeMin = 200;
 	/**
 	 * temps maximum pour une  decision
 	 */
-	private int timeMax = 300;
+	private int timeMax = 400;
 	/**
 	 * direction choisie
 	 */
@@ -75,7 +77,7 @@ public class AgentImpl extends Agent {
 	/**
 	 * Nombre de récursivité maximum
 	 */
-	private int levelMax = 5;
+	private int levelMax = 6;
 	/**
 	 * Liste des direction ou il ne faut pas aller
 	 */
@@ -98,6 +100,7 @@ public class AgentImpl extends Agent {
 	public Direction processDirection() {
 
 		checkInterruption();
+		
 		direction = Direction.NONE;
 
 		Board board = getBoard();
@@ -113,29 +116,39 @@ public class AgentImpl extends Agent {
 			updateAngles();
 			Set < Position > trail = new TreeSet < Position > (border);
 			Position posSnake = new Position(agentSnake.currentX, agentSnake.currentY);
-			getObstacle(board, trail);
+			
+			if(startAt!=null)
+			{
+				float elapsed = (System.currentTimeMillis() - time + startTime) / 2;
+				if( dansrayon || elapsed>timeMax)
+				{
+					lastDirection = direction;
+					startAt=null;
+					// si l'agent est sous le malus inverse on inverse ses choix de direction.
+					if (agentSnake.inversion) {
+						if (direction == Direction.RIGHT) {
+							return Direction.LEFT;
+						}
 
-			double val = algoLocal(board, trail, posSnake, 0, currentAngle, posSnake, 0, posSnake);
-			if (board.state == State.REGULAR && trail.size() > 1000) startTime = (System.currentTimeMillis() - time + startTime) / 2;
-			if (startTime > timeMax && board.state == State.REGULAR && trail.size() > 1000 && levelMax > 3) levelMax--;
-			else if (startTime < timeMin && board.state == State.REGULAR && trail.size() > 1000 && levelMax < 8 && val >= levelMax - 2) levelMax++;
-
-			if (prevent.size() <= 1) {
-				algoGlobal(board, trail);
-			}
-			// si l'agent est sous le malus inverse on inverse ses choix de direction.
-			if (agentSnake.inversion) {
-				if (direction == Direction.RIGHT) {
-					return Direction.LEFT;
+						if (direction == Direction.LEFT) {
+							return Direction.RIGHT;
+						}
+					}
+					return direction;
 				}
-
-				if (direction == Direction.LEFT) {
-					return Direction.RIGHT;
+			}else{
+				getObstacle(board, trail);
+	
+				double val = algoLocal(board, trail, posSnake, 0, currentAngle, posSnake, 0, posSnake);
+				if (board.state == State.REGULAR && trail.size() > 1000) startTime = (System.currentTimeMillis() - time + startTime) / 2;
+				if (startTime > timeMax && board.state == State.REGULAR && trail.size() > 1000 && levelMax > repeat) levelMax--;
+				else if (startTime < timeMin && board.state == State.REGULAR && trail.size() > 1000 && levelMax < 10 && val >= levelMax - 2) levelMax++;
+	
+				if (prevent.size() <= 1) {
+					algoGlobal(board, trail);
 				}
-			}
-
-			lastDirection = direction;
-			return direction;
+			}	
+			return lastDirection;
 		}
 	}
 
@@ -333,7 +346,7 @@ public class AgentImpl extends Agent {
 		{
 			return resultat;
 		}
-		if (niveau > 1) {
+		if (niveau > repeat) {
 			//on cherche a savoir ce qui riste de se passer si on arrive à cette position
 			if (isSafe(pos, lastpos, trail, board)) //safe
 			{
@@ -345,22 +358,24 @@ public class AgentImpl extends Agent {
 		}
 
 		Pair < Position, Double > cpos = new Pair < Position, Double > ();
-		if (niveau > 1 || lastDirection == Direction.RIGHT) {
+		if (niveau > repeat || lastDirection == Direction.RIGHT) {
 			cpos = calculatePosition(Direction.RIGHT, pos, angle);
 			valeurDirection.put(Direction.RIGHT, algoLocal(board, trail, cpos.getFirst(), resultat, cpos.getSecond(), posSnake, niveau + 1, pos));
 			if (lastDirection == Direction.RIGHT) valeurDirection.put(Direction.RIGHT, valeurDirection.get(Direction.RIGHT) + 2 / levelMax);
 		}
-		if (niveau > 1 || lastDirection == Direction.LEFT) {
+		if (niveau > repeat || lastDirection == Direction.LEFT) {
 			cpos = calculatePosition(Direction.LEFT, pos, angle);
 			valeurDirection.put(Direction.LEFT, algoLocal(board, trail, cpos.getFirst(), resultat, cpos.getSecond(), posSnake, niveau + 1, pos));
 			if (lastDirection == Direction.LEFT) valeurDirection.put(Direction.LEFT, valeurDirection.get(Direction.LEFT) + 2 / levelMax);
 		}
-		if (niveau > 1 || lastDirection == Direction.NONE) {
+		if (niveau > repeat || lastDirection == Direction.NONE) {
 			cpos = calculatePosition(Direction.NONE, pos, angle);
 			valeurDirection.put(Direction.NONE, algoLocal(board, trail, cpos.getFirst(), resultat, cpos.getSecond(), posSnake, niveau + 1, pos));
 			if (lastDirection == Direction.NONE) valeurDirection.put(Direction.NONE, valeurDirection.get(Direction.NONE) + 2 / levelMax);
 		}
-		if (niveau <= 1) {
+		if (niveau <= repeat) {
+			if(niveau==repeat)
+				startAt = cpos.getFirst();
 			return valeurDirection.get(lastDirection);
 		}
 		//prio droite
@@ -374,7 +389,7 @@ public class AgentImpl extends Agent {
 			resultat = valeurDirection.get(Direction.NONE);
 			direction = Direction.NONE;
 		}
-		if (niveau == 2) {
+		if (niveau == repeat+1) {
 			preventChoice(valeurDirection);
 		}
 		return resultat;
@@ -471,7 +486,7 @@ public class AgentImpl extends Agent {
 		double dist;
 		for (Snake snake: board.snakes) {
 			dist = Math.sqrt(Math.pow(agentSnake.currentX - snake.currentX, 2) + Math.pow(agentSnake.currentY - snake.currentY, 2));
-			if (snake != agentSnake && dist > 50) {
+			if (snake != agentSnake && dist > 100) {
 				double angletmp = (Math.atan2(snake.currentY - agentSnake.currentY, snake.currentX - agentSnake.currentX)) % (2 * Math.PI);
 				if (angletmp < 0) angletmp += 2 * Math.PI;
 				if ((currentAngle >= angletmp - Math.PI / 2 && currentAngle <= angletmp + Math.PI / 2) || (currentAngle >= angletmp - 2 * Math.PI - Math.PI / 2 && currentAngle <= angletmp - 2 * Math.PI + Math.PI / 2) || (currentAngle >= angletmp + 2 * Math.PI - Math.PI / 2 && currentAngle <= angletmp + 2 * Math.PI + Math.PI / 2)) {
