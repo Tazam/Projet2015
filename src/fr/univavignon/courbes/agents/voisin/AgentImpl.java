@@ -44,7 +44,7 @@ import fr.univavignon.courbes.common.Snake;
 public class AgentImpl extends Agent {
 	/** Direction courante du serpent de l'agent */
 	private double currentAngle;@SuppressWarnings("javadoc")
-	private int repeat=1;
+	private int repeat=2;
 	/**
 	 * temps nécessaire pour choisir une direction
 	 */
