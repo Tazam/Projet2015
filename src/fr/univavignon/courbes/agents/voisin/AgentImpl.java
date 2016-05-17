@@ -278,6 +278,14 @@ public class AgentImpl extends Agent {
 
 			}
 			//TODO faire pareil a droite et a gauche
+			if (Math.sqrt(Math.pow(agentSnake.currentX - obstacle.x, 2) + Math.pow(agentSnake.currentY - obstacle.y, 2)) < 50 && (angle <= Math.PI/4-0.35 || Math.PI >= Math.PI - 0.35)) {
+				prevent.add(Direction.LEFT);
+				break;
+			}
+			if (Math.sqrt(Math.pow(agentSnake.currentX - obstacle.x, 2) + Math.pow(agentSnake.currentY - obstacle.y, 2)) < 50 && (angle <= 3*Math.PI/4-0.35 || Math.PI >= Math.PI - 0.35)) {
+				prevent.add(Direction.RIGHT);
+				break;
+			}
 			//if(prevent.size()!=0)
 			//	defense=true;
 			//int val = BonusDirection(defense, board);
