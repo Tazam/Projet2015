@@ -95,7 +95,7 @@ public class Constants
 	/** Temps de vie d'un item (en ms), avant qu'il ne disparaisse de l'aire de jeu */
 	public static final long ITEM_DURATION = -1; // valeur négative = infini
 	/** Probabilité qu'un item apparaisse à chaque ms */
-	public static final float BASE_ITEM_POPUP_RATE = 0.0003f;//0.0001f; 
+	public static final float BASE_ITEM_POPUP_RATE = 0.3f;//0.0001f; 
 	/** Coefficient multiplicateur appliqué à la probabilité qu'un item apparaisse, pour l'augmenter */
 	public static final float ITEM_POPUP_COEFF = 1.2f; //TODO faut régler ça et/ou le popup rate
 	/** Nombre maximal d'items affichés simultanément à l'écran */
